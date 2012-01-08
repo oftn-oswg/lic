@@ -1,0 +1,3 @@
+#!/bin/bash
+
+node --strict_mode ../hub/Hub.js
