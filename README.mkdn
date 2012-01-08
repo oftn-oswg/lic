@@ -3,6 +3,8 @@ lic
 
 `lic` is an IRC client/IRC client framework.
 
+![lic](https://github.com/oftn/lic/raw/master/img/logo.png)
+
 Multiple-client
 ---------------
 A single `lic` hub will remain connected to IRC for you at all times, and you can “attach” multiple
