@@ -37,8 +37,8 @@ Hub.load_config = function(callback) {
 
 	// TODO: Non Windows-friendly URL
 	locations = [
-		FileUtils.get_home_dir() + "/.diaptoval/config.json",
-		"/etc/diaptoval/config.json"
+		FileUtils.get_home_dir() + "/.lic/config.json",
+		"/etc/lic/config.json"
 	];
 
 	config = new HubConfig (locations);

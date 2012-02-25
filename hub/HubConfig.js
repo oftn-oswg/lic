@@ -13,7 +13,7 @@ var HubConfig = function(locations) {
 
 	// Diaptoval Core namespace
 	this.data.Core = {};
-	this.data.Core.socket = "/tmp/diaptoval.sock";
+	this.data.Core.socket = "/tmp/lic.sock";
 
 	this.data.IRC = {};
 	this.data.IRC.default = {};

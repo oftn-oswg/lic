@@ -28,7 +28,7 @@ IRCManager.prototype.connect = function() {
 		///*
 		connection.on("raw", function(m) { console.log (m); });
 		connection.on("001", function(message) {
-			this.raw ("JOIN ##hat");
+			this.raw ("JOIN #oftn");
 		});
 		//*/
 	
