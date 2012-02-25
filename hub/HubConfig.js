@@ -102,24 +102,25 @@ HubConfig.prototype.write_file = function(file, callback) {
 	});
 };
 
+
 HubConfig.prototype.load_config_data = function (data) {
 
-	// Iterate and copy over the object recursively
-	(function extend (base, extension) {
-		for (var prop in extension) {
-			if (extension.hasOwnProperty (prop)) {
-				if (typeof base[prop] === "object") {
-					if (typeof extension[prop] === "object") {
-						extend (base[prop], extension[prop]);
-					} else {
-						throw new Error ("A "+(typeof extension[prop])+" exists where an object is expected");
-					}
-				} else {
-					base[prop] = extension[prop];
-				}
-			}
+    var getOwn = Object.getOwnPropertyNames;
+
+    (function extend (base, extension) {
+	getOwn(extension).forEach(function (prop) {
+	    if (typeof base[prop] === 'object') {
+		if (typeof extension[prop] !== 'object') {
+		    throw new Error('A ' + typeof extension[prop] + 
+				    ' exists where an object is expected.');
 		}
-	}) (this.data, data);
+		extend(base[prop], extension[prop]);
+	    }
+	    else {
+		base[prop] = extension[prop];
+	    }
+	});
+    })(this.data, data);
 };
 
 

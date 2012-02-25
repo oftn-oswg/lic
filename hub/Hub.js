@@ -72,14 +72,16 @@ Hub.connection = function(socket) {
 };
 
 Hub.shutdown = function() {
+
 	console.log ("Shutting down");
 
 	// Close petal connections
 	this.server.close ();
 
-	// We need to tell each manager to shut down
-	// We only have one manager right now for IRC
-	this.managers[0].disconnect (exit);
+	// Tell each manager to shut down
+	this.managers.forEach(function (each) {
+	    each.disconnect (exit);
+	});
 
 	// Final termination code
 	function exit () {
@@ -102,6 +104,7 @@ Hub.start_chat = function() {
 
 
 Hub.init ();
+
 process.on('SIGINT', function () {
 	Hub.shutdown ();
 });
