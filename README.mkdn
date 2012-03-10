@@ -26,3 +26,10 @@ as [irssi][], entirely through user-built scripts.
 
    [ii]: <http://tools.suckless.org/ii/> "a minimalist FIFO and filesystem-based IRC client"
    [irssi]: <http://irssi.org/> "themable ncurses IRC client"
+
+Current features
+----------------
+
+ * Alternate nick support
+ * Message throttling
+ * SSL support (10 Mar 2012)
