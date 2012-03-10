@@ -8,7 +8,7 @@ lic
 Multiple-client
 ---------------
 A single `lic` hub will remain connected to IRC for you at all times, and you can “attach” multiple
-clients to it--called leaves--in separate terminals, viewing different channels, queries, or combinations of
+clients to it--called petals--in separate terminals, viewing different channels, queries, or combinations of
 channels and queries. You can define ‘windows’ that will retain specific combinations of channels
 and queries, and retain scrollback from them for when you return at a later point.
 
