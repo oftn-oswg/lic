@@ -1,3 +1,3 @@
 #!/bin/bash
 
-echo 'The lic petal has not been implemented, yet.'
+node --strict_mode ../leaf/Leaf.js

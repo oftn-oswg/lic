@@ -75,7 +75,7 @@ Hub.shutdown = function() {
 
 	console.log ("Shutting down");
 
-	// Close petal connections
+	// Close leaf connections
 	this.server.close ();
 
 	// Tell each manager to shut down
