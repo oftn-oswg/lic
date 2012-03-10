@@ -1,5 +1,6 @@
 var util = require ("util");
 var net = require ("net");
+var tls = require ("tls");
 
 /*
  * A special connection for handling the IRC protocol.
@@ -94,22 +95,62 @@ var IRCConnection = function(profile) {
 util.inherits (IRCConnection, process.EventEmitter);
 
 IRCConnection.prototype.connect = function() {
+	var connection, options, self;
 
-	var connection = net.createConnection (this.port, this.host);
-	connection.setEncoding (this.encoding);
-	connection.setTimeout (this.timeout);
-	connection.setKeepAlive (true);
+	self = this;
+	
+	if (this.profile.ssl) {
+		this.ssl_load (function(options) {
+			connection = tls.connect (this.port, this.host, options);
+			connection.on ("secureConnect", this.on_ssl_connect.bind(self));
 
-	var self = this;
+			setup (connection);
+		});
+	} else {
+		connection = net.createConnection (this.port, this.host);
+		connection.setKeepAlive (true);
 
-	/* We need to tunnel the events to this IRCConnection object */
-	connection.on ("connect", function() { self.emit.apply (self, ["connect"].concat (Array.prototype.slice.call(arguments))); });
-	connection.on ("data",    function() { self.emit.apply (self, ["data"]   .concat (Array.prototype.slice.call(arguments))); });
-	connection.on ("close",   function() { self.emit.apply (self, ["close"]  .concat (Array.prototype.slice.call(arguments))); });
-	connection.on ("error",   function() { self.emit.apply (self, ["error"]  .concat (Array.prototype.slice.call(arguments))); });
-	connection.on ("timeout", function() { self.emit.apply (self, ["timeout"].concat (Array.prototype.slice.call(arguments))); });
+		setup (connection);
+	}
 
-	this.connection = connection;
+	function setup (connection) {
+		connection.setEncoding (this.encoding);
+		connection.setTimeout (this.timeout);
+
+		/* We need to tunnel the events to this IRCConnection object */
+		connection.on ("connect", function() { self.emit.apply (self, ["connect"].concat (Array.prototype.slice.call(arguments))); });
+		connection.on ("data",    function() { self.emit.apply (self, ["data"]   .concat (Array.prototype.slice.call(arguments))); });
+		connection.on ("close",   function() { self.emit.apply (self, ["close"]  .concat (Array.prototype.slice.call(arguments))); });
+		connection.on ("error",   function() { self.emit.apply (self, ["error"]  .concat (Array.prototype.slice.call(arguments))); });
+		connection.on ("timeout", function() { self.emit.apply (self, ["timeout"].concat (Array.prototype.slice.call(arguments))); });
+
+		self.connection = connection;
+	}
+};
+
+IRCConnection.prototype.ssl_load = function(callback) {
+	var options = {};
+
+	/* TODO: Use asyncronous calls, allow keys/certs
+	if (this.profile.ssl_key) {
+		options.key = fs.readFileSync (this.profile.ssl_key);
+	}
+
+	if (this.profile.ssl_cert) {
+		options.cert = fs.readFileSync (this.profile.ssl_cert);
+	}
+	//*/
+	
+	callback.call (this, options);
+};
+
+IRCConnection.prototype.on_ssl_connect = function() {
+	if (this.connection.authorized) {
+		this.emit ("connect");
+	} else {
+		console.log ("%s: Peer certificate was not signed by specified CA: %s", this.name, this.connection.authorizationError);
+		this.connection.end ();
+	}
 };
 
 /* IRCConnection#quit(message):
@@ -126,6 +167,11 @@ IRCConnection.prototype.quit = function(callback) {
 	var quit_message, self = this;
 
 	quit_message = this.profile.quit_message;
+
+	if (this.connection.readyState !== "open") {
+		callback.call (this);
+		return;
+	}
 
 	this.raw ("QUIT" + (quit_message ? " :" + quit_message : ""));
 

@@ -8,14 +8,15 @@ Example
 -------
 
     {
-        "host": "irc.freenode.net",
-        "port": 6667,
+        "host": "chat.freenode.net",
+        "port": 6697,
         "name": "Freenode",
         "nick": ["eboy", "eboyjr", "eman", "emanjr"],
         "username": "eboyjr",
         "realname": "Devin Samarin",
         "password": "hunter2",
-        "quit_message": "The reports of my death have been greatly exaggerated."
+        "quit_message": "The reports of my death have been greatly exaggerated.",
+        "ssl": true
     }
 
 
@@ -87,5 +88,11 @@ Description
     <td>number</td>
     <td>Time to wait before sending another message in milliseconds</td>
     <td>2200</td>
+  </tr>
+  <tr>
+    <td>ssl</td>
+    <td>boolean</td>
+    <td>Connect to the IRC server with SSL</td>
+    <td>No</td>
   </tr>
 </table>
