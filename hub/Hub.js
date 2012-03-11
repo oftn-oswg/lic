@@ -3,7 +3,6 @@
 var net = require ("net");
 var util = require ("util");
 
-var FileUtils = require ("./FileUtils.js");
 var HubConfig = require ("./HubConfig.js");
 var IRCManager = require ("./IRCManager.js");
 
@@ -33,15 +32,9 @@ Hub.init = function() {
  * The callback function will be called with the configuration data.
  **/
 Hub.load_config = function(callback) {
-	var config, locations, self = this;
+	var config;
 
-	// TODO: Non Windows-friendly URL
-	locations = [
-		FileUtils.get_home_dir() + "/.lic/config.json",
-		"/etc/lic/config.json"
-	];
-
-	config = new HubConfig (locations);
+	config = new HubConfig ();
 	config.load (callback, this);
 };
 

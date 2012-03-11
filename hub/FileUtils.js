@@ -51,15 +51,18 @@ exports.path_is_absolute = function (filename) {
 };
 
 if (process.platform === "win32") {
-
-	exports.is_dir_seperator = function(ch) {
-		return ch === "/" || ch === "\\";
-	};
-
+	exports.dir_seperator = /\/\\/g;
 } else {
-
-	exports.is_dir_seperator = function(ch) {
-		return ch === "/";
-	};
-
+	exports.dir_seperator = /\//g;
 }
+
+exports.is_dir_seperator = function(ch) {
+	return exports.dir_seperator.test (ch);
+};
+
+exports.expand = function(path) {
+	if (path.charAt (0) === "~")
+		return path.replace ("~", exports.get_home_dir());
+
+	return path;
+};

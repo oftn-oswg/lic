@@ -1,17 +1,16 @@
 "use strict";
 
 var fs = require ("fs");
-
+var FileUtils = require ("./FileUtils.js");
 
 var HubConfig = function(locations) {
 
 	this.path = null;
-	this.locations = locations;
 
-	// Diaptoval defaults
+	// lic defaults
 	this.data = {};
 
-	// Diaptoval Core namespace
+	// lic Core namespace
 	this.data.Core = {};
 	this.data.Core.socket = "/tmp/lic.sock";
 
@@ -20,52 +19,93 @@ var HubConfig = function(locations) {
 	this.data.IRC.servers = [];
 };
 
+HubConfig.prototype.location = "~/.lic/config.json";
+
 
 HubConfig.prototype.load = function(callback, self) {
-	var locations, config = this;
+	var location;
 
-	// Make a copy of the locations array
-	locations = this.locations.slice ();
-	
-	// Continuation-passing style is the best
-	(function retry() {
+	location = this.location;
 
-		if (!locations.length) {
-			// We have no more locations to look
-			console.error ("No configuration file found, using defaults");
-			callback.call (self, config);
-			return;
+	this.load_file (location, function (success) {
+		if (success) {
+			callback.call (self, this);
+		} else {
+			console.error ("Could not create configuration file: %s", location);
+			process.exit ();
 		}
+	});
 
-		// Pop location off beginning of array
-		var file = locations.shift ();
+};
 
-		config.load_file (file, function (success) {
-			if (success) {
-				config.path = file;
-				callback.call (self, config);
-			} else {
-				retry ();
-			}
-		});
 
-	})();
+HubConfig.prototype.create_config = function (filename, callback) {
+	var dirs, path_current, self = this;
 
+	dirs = filename.split (FileUtils.dir_seperator);
+	path_current = [];
+
+	(function next() {
+		var dir, current;
+
+		dir = dirs.shift ();
+		path_current.push (dir);
+		current = path_current.join("/");
+
+		if (dir) {
+			fs.stat(current, function(error, stats) {
+				if (error) {
+					if (!dirs.length) {
+						self.write_file (current, callback);
+					} else {
+						fs.mkdir (current, function(error) {
+							if (error) {
+								callback.call (self, false);
+							} else {
+								next.call (self);
+							}
+						});
+					}
+				} else {
+					if (stats.isDirectory()) {
+						next.call (self);
+					} else {
+						if (!dirs.length) {
+							callback.call (self, true);
+						} else {
+							callback.call (self, false);
+						}
+					}
+				}
+			});
+		} else {
+			next.call (self);
+		}
+	}).call(self);
 };
 
 
 /**
  * HubConfig#load_file()
- * Read a Diaptoval configuration file into the object
+ * Read a lic configuration file into the object
  **/
-HubConfig.prototype.load_file = function (filename, callback) {
-	var self = this;
+HubConfig.prototype.load_file = function (location, callback) {
+	var home, filename, self = this;
+
+	filename = FileUtils.expand (location);
 
 	fs.readFile(filename, "utf8", function (err, json) {
 		var data;
 
 		if (err) {
-			callback.call (this, false);
+			self.create_config (filename, function(success) {
+				if (!success) {
+					console.error ("Could not create configuration file: %s", filename);
+					process.exit ();
+					return;
+				}
+				callback.call (self, success);
+			});
 			return;
 		}
 
@@ -76,10 +116,10 @@ HubConfig.prototype.load_file = function (filename, callback) {
 			data = JSON.parse (json);
 
 			self.load_config_data (data);
-			callback.call (this, true);
+			callback.call (self, true);
 		} catch (e) {
 			console.error (String(e));
-			callback.call (this, false);
+			callback.call (self, false);
 		}
 	});
 };
