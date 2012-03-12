@@ -57,6 +57,14 @@ var IRCConnection = function(profile) {
 	this.message_time = 0; // Time the last message was sent
 
 	this.on ("connect", (function() { this.identify (); }).bind (this));
+	this.on ("secureConnect", (function() {
+		if (this.connection.authorized) {
+			this.emit ("connect");
+		} else {
+			console.log ("%s: Peer certificate was not signed by specified CA: %s", this.name, this.connection.authorizationError);
+			this.connection.end ();
+		}
+	}).bind (this));
 
 	var buffer = "";
 	this.on ("data", (function(chunk) {
@@ -102,14 +110,10 @@ IRCConnection.prototype.connect = function() {
 	if (this.profile.ssl) {
 		this.ssl_load (function(options) {
 			connection = tls.connect (this.port, this.host, options);
-			connection.on ("secureConnect", this.on_ssl_connect.bind(self));
-
 			setup (connection);
 		});
 	} else {
 		connection = net.createConnection (this.port, this.host);
-		connection.setKeepAlive (true);
-
 		setup (connection);
 	}
 
@@ -117,12 +121,18 @@ IRCConnection.prototype.connect = function() {
 		connection.setEncoding (this.encoding);
 		connection.setTimeout (this.timeout);
 
+		// Node.js version 0.6.12 doesn't have the setKeepAlive function inherited for TLS connections.
+		if (connection.setKeepAlive) {
+			connection.setKeepAlive (true);
+		}
+
 		/* We need to tunnel the events to this IRCConnection object */
-		connection.on ("connect", function() { self.emit.apply (self, ["connect"].concat (Array.prototype.slice.call(arguments))); });
-		connection.on ("data",    function() { self.emit.apply (self, ["data"]   .concat (Array.prototype.slice.call(arguments))); });
-		connection.on ("close",   function() { self.emit.apply (self, ["close"]  .concat (Array.prototype.slice.call(arguments))); });
-		connection.on ("error",   function() { self.emit.apply (self, ["error"]  .concat (Array.prototype.slice.call(arguments))); });
-		connection.on ("timeout", function() { self.emit.apply (self, ["timeout"].concat (Array.prototype.slice.call(arguments))); });
+		connection.on ("secureConnect", function() { self.emit ("secureConnect"); });
+		connection.on ("connect",   function()     { self.emit ("connect"); });
+		connection.on ("data",      function(data) { self.emit ("data", data); });
+		connection.on ("close",     function(err)  { self.emit ("close", err); });
+		connection.on ("error",     function()     { self.emit ("error"); });
+		connection.on ("timeout",   function()     { self.emit ("timeout"); });
 
 		self.connection = connection;
 	}
@@ -142,15 +152,6 @@ IRCConnection.prototype.ssl_load = function(callback) {
 	//*/
 	
 	callback.call (this, options);
-};
-
-IRCConnection.prototype.on_ssl_connect = function() {
-	if (this.connection.authorized) {
-		this.emit ("connect");
-	} else {
-		console.log ("%s: Peer certificate was not signed by specified CA: %s", this.name, this.connection.authorizationError);
-		this.connection.end ();
-	}
 };
 
 /* IRCConnection#quit(message):
