@@ -6,16 +6,17 @@ var util = require ("util");
 var HubConfig = require ("./HubConfig.js");
 var IRCManager = require ("./irc/Manager.js");
 
-var Hub = {};
-Hub.managers = [];
+var Hub = function() {
+	this.managers = [];
+};
 
 /**
- * Hub.init():
+ * Hub.prototype.init():
  * This is the main entry-point for the hub.
  *
  * It starts by loading the config file.
  **/
-Hub.init = function() {
+Hub.prototype.init = function() {
 
 	this.load_config (function(config) {
 		this.config = config;
@@ -27,11 +28,11 @@ Hub.init = function() {
 
 
 /**
- * Hub.load_config():
+ * Hub.prototype.load_config():
  * This will scan directories for the config file and load it into memory.
  * The callback function will be called with the configuration data.
  **/
-Hub.load_config = function(callback) {
+Hub.prototype.load_config = function(callback) {
 	var config;
 
 	config = new HubConfig ();
@@ -39,10 +40,10 @@ Hub.load_config = function(callback) {
 };
 
 /**
- * Hub.start_server():
+ * Hub.prototype.start_server():
  * This opens up a local socket and applies listeners.
  **/
-Hub.start_server = function() {
+Hub.prototype.start_server = function() {
 	var server, self = this;
 
 	console.log ("Starting up hub server");
@@ -55,16 +56,16 @@ Hub.start_server = function() {
 	this.server = server;
 };
 
-Hub.listening = function() {
+Hub.prototype.listening = function() {
 	console.log ("Now listening at %s", this.config.data.Core.socket);
 };
 
-Hub.connection = function(socket) {
+Hub.prototype.connection = function(socket) {
 	console.log ("Petal connected");
 	socket.end ("Hello.\nGoodbye.\n");
 };
 
-Hub.shutdown = function() {
+Hub.prototype.shutdown = function() {
 
 	console.log ("Shutting down");
 
@@ -86,7 +87,7 @@ Hub.shutdown = function() {
  * Hub.start_chat():
  * This opens up the IRC connections from the config
  **/
-Hub.start_chat = function() {
+Hub.prototype.start_chat = function() {
 	var irc;
 	
 	irc = new IRCManager (this.config);
@@ -95,9 +96,4 @@ Hub.start_chat = function() {
 	this.managers.push (irc);
 };
 
-
-Hub.init ();
-
-process.on('SIGINT', function () {
-	Hub.shutdown ();
-});
+module.exports = Hub;

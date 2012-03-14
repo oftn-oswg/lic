@@ -1,3 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env node
 
-node --strict_mode ../hub/Hub.js
+var Hub = require ("../hub/Hub.js");
+
+var hub_instance = new Hub();
+hub_instance.init ();
+
+process.on('SIGINT', function () {
+	hub_instance.shutdown ();
+});
