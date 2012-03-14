@@ -1,6 +1,6 @@
 var Connection = require ("./Connection.js");
 
-var IRCManager = function(config) {
+var IRCManager = function (config) {
 	this.config = config;
 	this.connections = [];
 };
@@ -9,25 +9,25 @@ var IRCManager = function(config) {
  * it with the defaults from the config so that when the defaults
  * change or the server profile changes, it will updated as such
  */
-IRCManager.prototype.create_profile = function(profile, defaults) {
+IRCManager.prototype.create_profile = function (profile, defaults) {
 	profile.__proto__ = defaults;
 	return profile;
 };
 
-IRCManager.prototype.connect = function() {
+IRCManager.prototype.connect = function () {
 	var connection, profile, servers, defaults;
 
-	servers = this.config.data.IRC.servers;
+	servers  = this.config.data.IRC.servers;
 	defaults = this.config.data.IRC.default;
 
 	for (var i = 0, len = servers.length; i < len; i++) {
 
 		profile = this.create_profile (servers[i], defaults);
-		connection = new Connection(profile);
+		connection = new Connection (profile);
 
 		///*
-		connection.on("raw", function(m) { console.log (m); });
-		connection.on("001", function(message) {
+		connection.on("raw", function (m) { console.log (m); });
+		connection.on("001", function (message) {
 			this.raw ("JOIN #oftn");
 		});
 		//*/
@@ -46,14 +46,14 @@ IRCManager.prototype.disconnect = function(callback) {
 	connections = this.connections.slice ();
 	console.log ("Waiting for servers to close connections...");
 
-	(function next() {
+	(function next () {
 		var c = connections.shift ();
 		if (!c) {
 			callback.call (self);
 			return;
 		}
 		c.quit (next);
-	})();
+	}) ();
 };
 
 module.exports = IRCManager;

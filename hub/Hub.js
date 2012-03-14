@@ -7,7 +7,7 @@ var HubConfig  = require ("./HubConfig.js");
 var IRCManager = require ("./irc/Manager.js");
 var Server     = require ("./Server.js");
 
-var Hub = function() {
+var Hub = function () {
 	this.managers = [];
 };
 
@@ -17,9 +17,9 @@ var Hub = function() {
  *
  * It starts by loading the config file.
  **/
-Hub.prototype.init = function() {
+Hub.prototype.init = function () {
 
-	this.load_config (function(config) {
+	this.load_config (function (config) {
 		this.config = config;
 		this.start_server ();
 		this.start_chat ();
@@ -33,7 +33,7 @@ Hub.prototype.init = function() {
  * This will scan directories for the config file and load it into memory.
  * The callback function will be called with the configuration data.
  **/
-Hub.prototype.load_config = function(callback) {
+Hub.prototype.load_config = function (callback) {
 	var config;
 
 	config = new HubConfig ();
@@ -44,14 +44,14 @@ Hub.prototype.load_config = function(callback) {
  * Hub.prototype.start_server():
  * This opens up a local socket and applies listeners.
  **/
-Hub.prototype.start_server = function() {
+Hub.prototype.start_server = function () {
 	console.log ("Starting up hub server");
 
 	this.server = new Server (this.config);
 	this.server.listen ();
 };
 
-Hub.prototype.shutdown = function() {
+Hub.prototype.shutdown = function () {
 
 	console.log ("Shutting down");
 
@@ -59,7 +59,7 @@ Hub.prototype.shutdown = function() {
 	this.server.close ();
 
 	// Tell each manager to shut down
-	this.managers.forEach(function (each) {
+	this.managers.forEach (function (each) {
 	    each.disconnect (exit);
 	});
 
@@ -73,7 +73,7 @@ Hub.prototype.shutdown = function() {
  * Hub.start_chat():
  * This opens up the IRC connections from the config
  **/
-Hub.prototype.start_chat = function() {
+Hub.prototype.start_chat = function () {
 	var irc;
 	
 	irc = new IRCManager (this.config);

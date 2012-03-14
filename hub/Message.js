@@ -1,4 +1,4 @@
-var Message = module.exports = function(type, data) {
+var Message = module.exports = function (type, data) {
 	this.type = type;
 
 	for (var key in data) {
@@ -8,6 +8,6 @@ var Message = module.exports = function(type, data) {
 	}
 };
 
-Message.prototype.stringify = function() {
+Message.prototype.stringify = function () {
 	return JSON.stringify (this);
 };

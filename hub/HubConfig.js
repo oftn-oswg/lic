@@ -1,10 +1,10 @@
 "use strict";
 
-var fs = require ("fs");
-var path = require ("path");
+var fs        = require ("fs");
+var path      = require ("path");
 var FileUtils = require ("./FileUtils.js");
 
-var HubConfig = function(locations) {
+var HubConfig = function (locations) {
 
 	this.path = null;
 
@@ -23,7 +23,7 @@ var HubConfig = function(locations) {
 HubConfig.prototype.location = path.join (FileUtils.home (), ".lic", "config.json");
 
 
-HubConfig.prototype.load = function(callback, self) {
+HubConfig.prototype.load = function (callback, self) {
 	var location;
 
 	location = this.location;
@@ -43,7 +43,7 @@ HubConfig.prototype.load = function(callback, self) {
 HubConfig.prototype.create_directory = function (dir, callback) {
 	var self = this;
 
-	path.exists (dir, function(exists) {
+	path.exists (dir, function (exists) {
 		if (exists) {
 			callback.call (self, null);
 		} else {
@@ -89,7 +89,7 @@ HubConfig.prototype.create_config = function (filename, callback) {
 HubConfig.prototype.load_file = function (filename, callback) {
 	var self = this;
 
-	fs.readFile(filename, "utf8", function (error, json) {
+	fs.readFile (filename, "utf8", function (error, json) {
 		var data;
 
 		if (error) {
@@ -128,7 +128,7 @@ HubConfig.prototype.write_file = function(file, callback) {
 
 	data = JSON.stringify (this.data, null, 4);
 
-	fs.writeFile(file, data, 'utf8', function(error) {
+	fs.writeFile (file, data, 'utf8', function(error) {
 		callback.call (self, error);
 	});
 };
@@ -136,23 +136,22 @@ HubConfig.prototype.write_file = function(file, callback) {
 
 HubConfig.prototype.load_config_data = function (data) {
 
-    var getOwn = Object.getOwnPropertyNames;
+	var getOwn = Object.getOwnPropertyNames;
 
-    (function extend (base, extension) {
-	getOwn(extension).forEach(function (prop) {
-	    if (typeof base[prop] === 'object') {
-		if (typeof extension[prop] !== 'object') {
-		    throw new Error('A ' + typeof extension[prop] + 
-				    ' exists where an object is expected.');
-		}
-		extend(base[prop], extension[prop]);
+	(function extend (base, extension) {
+		getOwn(extension).forEach(function (prop) {
+			if (typeof base[prop] === 'object') {
+				if (typeof extension[prop] !== 'object') {
+					throw new Error('A ' + typeof extension[prop] + 
+													' exists where an object is expected.');
+				}
+				extend(base[prop], extension[prop]);
+	    } else {
+				base[prop] = extension[prop];
 	    }
-	    else {
-		base[prop] = extension[prop];
-	    }
-	});
-    })(this.data, data);
+		});
+	})(this.data, data);
+
 };
-
 
 module.exports = HubConfig;

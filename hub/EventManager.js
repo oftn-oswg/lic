@@ -5,7 +5,7 @@
  * with an EventManager instance. This is the main starting point
  * for all of the events.
  */
-var EventManager = function() {
+var EventManager = function () {
 };
 
-EventManager
+//EventManager

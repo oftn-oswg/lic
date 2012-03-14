@@ -19,7 +19,7 @@ Server.prototype.listen = function () {
 	this.server.on ("connection", function(socket) { self.connection (socket); });
 	this.server.on ("listening", function() { self.listening (); });
 
-	this.server.listen(this.config.data.Core.socket);
+	this.server.listen (this.config.data.Core.socket);
 };
 
 /**
@@ -42,7 +42,7 @@ Server.prototype.listening = function() {
 Server.prototype.connection = function(socket) {
 	// TODO: Maintain a persistent connection.
 	console.log ("Petal connected");
-	socket.end ("Hello.\nGoodbye.\n");
+	socket.end  ("Hello.\nGoodbye.\n");
 };
 
 module.exports = Server;

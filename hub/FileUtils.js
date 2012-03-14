@@ -6,7 +6,7 @@ var FileUtils = {
 	home: (function () {
 		var cache = null;
 
-		return function() {
+		return function () {
 			if (cache) return cache;
 
 			var home = process.env.HOME;
@@ -38,7 +38,7 @@ var FileUtils = {
 
 			return cache = home;
 		};
-	})()
+	}) ()
 };
 
 module.exports = FileUtils;
