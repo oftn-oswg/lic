@@ -1,6 +1,7 @@
 "use strict";
 
 var fs = require ("fs");
+var path = require ("path");
 var FileUtils = require ("./FileUtils.js");
 
 var HubConfig = function(locations) {
@@ -19,7 +20,7 @@ var HubConfig = function(locations) {
 	this.data.IRC.servers = [];
 };
 
-HubConfig.prototype.location = "~/.lic/config.json";
+HubConfig.prototype.location = path.join (FileUtils.home (), ".lic", "config.json");
 
 
 HubConfig.prototype.load = function(callback, self) {
@@ -27,61 +28,57 @@ HubConfig.prototype.load = function(callback, self) {
 
 	location = this.location;
 
-	this.load_file (location, function (success) {
-		if (success) {
-			callback.call (self, this);
-		} else {
+	this.load_file (location, function (error) {
+		if (error) {
 			console.error ("Could not create configuration file: %s", location);
 			process.exit ();
 		}
+
+		callback.call (self, this);
 	});
 
+};
+
+
+HubConfig.prototype.create_directory = function (dir, callback) {
+	var self = this;
+
+	path.exists (dir, function(exists) {
+		if (exists) {
+			callback.call (self, null);
+		} else {
+			fs.mkdir (dir, function (error) {
+				if (error) {
+					self.create_directory (path.dirname (dir), function(error) {
+						if (error) {
+							callback.call (self, error);
+						} else {
+							self.create_directory (dir, callback);
+						}
+					});
+					return;
+				}
+				
+				callback.call (self, null);
+			});
+		}
+	});
 };
 
 
 HubConfig.prototype.create_config = function (filename, callback) {
 	var dirs, path_current, self = this;
 
-	dirs = filename.split (FileUtils.dir_seperator);
-	path_current = [];
+	console.log ("Creating configuration file: %s", filename);
 
-	(function next() {
-		var dir, current;
-
-		dir = dirs.shift ();
-		path_current.push (dir);
-		current = path_current.join("/");
-
-		if (dir) {
-			fs.stat(current, function(error, stats) {
-				if (error) {
-					if (!dirs.length) {
-						self.write_file (current, callback);
-					} else {
-						fs.mkdir (current, function(error) {
-							if (error) {
-								callback.call (self, false);
-							} else {
-								next.call (self);
-							}
-						});
-					}
-				} else {
-					if (stats.isDirectory()) {
-						next.call (self);
-					} else {
-						if (!dirs.length) {
-							callback.call (self, true);
-						} else {
-							callback.call (self, false);
-						}
-					}
-				}
-			});
-		} else {
-			next.call (self);
+	this.create_directory (path.dirname (filename), function (error) {
+		if (error) {
+			callback.call (self, error);
+			return;
 		}
-	}).call(self);
+		
+		self.write_file (filename, callback);
+	});
 };
 
 
@@ -89,22 +86,20 @@ HubConfig.prototype.create_config = function (filename, callback) {
  * HubConfig#load_file()
  * Read a lic configuration file into the object
  **/
-HubConfig.prototype.load_file = function (location, callback) {
-	var home, filename, self = this;
+HubConfig.prototype.load_file = function (filename, callback) {
+	var self = this;
 
-	filename = FileUtils.expand (location);
-
-	fs.readFile(filename, "utf8", function (err, json) {
+	fs.readFile(filename, "utf8", function (error, json) {
 		var data;
 
-		if (err) {
-			self.create_config (filename, function(success) {
-				if (!success) {
+		if (error) {
+			self.create_config (filename, function(error) {
+				if (error) {
 					console.error ("Could not create configuration file: %s", filename);
 					process.exit ();
 					return;
 				}
-				callback.call (self, success);
+				callback.call (self, error);
 			});
 			return;
 		}
@@ -116,10 +111,10 @@ HubConfig.prototype.load_file = function (location, callback) {
 			data = JSON.parse (json);
 
 			self.load_config_data (data);
-			callback.call (self, true);
+			callback.call (self, null);
 		} catch (e) {
 			console.error (String(e));
-			callback.call (self, false);
+			callback.call (self, e);
 		}
 	});
 };
@@ -133,12 +128,8 @@ HubConfig.prototype.write_file = function(file, callback) {
 
 	data = JSON.stringify (this.data, null, 4);
 
-	if (!file) file = this.path;
-	if (!file) throw new Error ("No place to save configuration");
-
-	fs.writeFile(file, data, 'utf8', function(err) {
-		var success = !err;
-		callback.call (self, success);
+	fs.writeFile(file, data, 'utf8', function(error) {
+		callback.call (self, error);
 	});
 };
 
