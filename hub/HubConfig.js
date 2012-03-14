@@ -139,18 +139,18 @@ HubConfig.prototype.load_config_data = function (data) {
 	var getOwn = Object.getOwnPropertyNames;
 
 	(function extend (base, extension) {
-		getOwn(extension).forEach(function (prop) {
+		getOwn (extension).forEach(function (prop) {
 			if (typeof base[prop] === 'object') {
 				if (typeof extension[prop] !== 'object') {
-					throw new Error('A ' + typeof extension[prop] + 
-													' exists where an object is expected.');
+					throw new Error ('A ' + typeof extension[prop] + 
+													 ' exists where an object is expected.');
 				}
-				extend(base[prop], extension[prop]);
+				extend (base[prop], extension[prop]);
 	    } else {
 				base[prop] = extension[prop];
 	    }
 		});
-	})(this.data, data);
+	}) (this.data, data);
 
 };
 
