@@ -1,10 +1,11 @@
 "use strict";
 
-var net = require ("net");
+var net  = require ("net");
 var util = require ("util");
 
-var HubConfig = require ("./HubConfig.js");
+var HubConfig  = require ("./HubConfig.js");
 var IRCManager = require ("./irc/Manager.js");
+var Server     = require ("./Server.js");
 
 var Hub = function() {
 	this.managers = [];
@@ -44,25 +45,10 @@ Hub.prototype.load_config = function(callback) {
  * This opens up a local socket and applies listeners.
  **/
 Hub.prototype.start_server = function() {
-	var server, self = this;
-
 	console.log ("Starting up hub server");
-	server = net.createServer ();
-	server.listen(this.config.data.Core.socket);
 
-	server.on ("connection", function(socket) { self.connection (socket); });
-	server.on ("listening", function() { self.listening (); });
-
-	this.server = server;
-};
-
-Hub.prototype.listening = function() {
-	console.log ("Now listening at %s", this.config.data.Core.socket);
-};
-
-Hub.prototype.connection = function(socket) {
-	console.log ("Petal connected");
-	socket.end ("Hello.\nGoodbye.\n");
+	this.server = new Server (this.config);
+	this.server.listen ();
 };
 
 Hub.prototype.shutdown = function() {
