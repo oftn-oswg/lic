@@ -47,6 +47,7 @@ var IRCConnection = function(profile) {
 	/* profile.encoding: The encoding of the stream */
 	this.encoding = profile.encoding || "utf8";
 
+	this.welcomed = false;
 	this.connected = false;
 	this.connection = null;
 	this.timeout = 0;
@@ -95,6 +96,7 @@ var IRCConnection = function(profile) {
 		this.raw ("PONG :" + data.message);
 	});
 
+	this.on ("001", function() { this.welcomed = true; }); // Welcome
 	this.on ("432", this.nick_alt); // Erroneous nickname
 	this.on ("433", this.nick_alt); // Nickname in use
 	this.on ("436", this.nick_alt); // Nickname collision
@@ -170,6 +172,14 @@ IRCConnection.prototype.quit = function(callback) {
 	quit_message = this.profile.quit_message;
 
 	if (this.connection.readyState !== "open") {
+		callback.call (this);
+		return;
+	}
+
+	// If we didn't receive a 001 command,
+	// then we should just end the connection
+	if (!this.welcomed) {
+		this.connection.end ();
 		callback.call (this);
 		return;
 	}

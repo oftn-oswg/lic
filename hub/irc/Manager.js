@@ -1,4 +1,4 @@
-var Connection = require ("./IRCConnection.js");
+var Connection = require ("./Connection.js");
 
 var IRCManager = function(config) {
 	this.config = config;

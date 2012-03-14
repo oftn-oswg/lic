@@ -4,7 +4,7 @@ var net = require ("net");
 var util = require ("util");
 
 var HubConfig = require ("./HubConfig.js");
-var IRCManager = require ("./irc/IRCManager.js");
+var IRCManager = require ("./irc/Manager.js");
 
 var Hub = {};
 Hub.managers = [];
