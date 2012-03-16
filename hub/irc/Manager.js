@@ -29,6 +29,8 @@ IRCManager.prototype.connect = function () {
 		connection.on("raw", function (m) { console.log (m); });
 		connection.on("001", function (message) {
 			this.raw ("JOIN #oftn");
+			var stdin = process.openStdin();
+			stdin.on('data', function(chunk) { connection.send ("PRIVMSG #oftn :"+chunk); });
 		});
 		//*/
 	
