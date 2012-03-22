@@ -1,7 +1,7 @@
-module.exports = function (hub) {
+module.exports = function (hub, name) {
 	// We register ourself as darkf_dix and are returned a handle that
 	// allows us to subscribe to or unsubscribe from events.
-	hub.register ("darkf_dix", function (handle) {
+	hub.register (name || "darkf_dix", function (handle) {
 		// The first argument specifies what item to subscribe to events from.
 		// If null or undefined, the default is "*". The second argument
 		// specifies what kind of events to accept. If left null or undefined,
