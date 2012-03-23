@@ -62,8 +62,14 @@ Hub.prototype.shutdown = function () {
 	this.server.close ();
 
 	// Tell each manager to shut down
+	var num = this.managers.length;
 	this.managers.forEach (function (each) {
-	    each.disconnect (exit);
+		each.disconnect (function() {
+			num--;
+			if (!num) {
+				exit();
+			}
+		});
 	});
 
 	// Final termination code
