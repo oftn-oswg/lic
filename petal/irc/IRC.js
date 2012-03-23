@@ -14,13 +14,13 @@ var IRC = module.exports = function (link, name) {
 			self.respond (sender, command, args);
 		});
 
+		var configItem = self.link.item ("lic/config/" + self.name);
+
 		// Subscribe to any changes to our config.
-		self.link.subscribe ("lic/config/" + self.name, function (e) {
+		configItem.subscribe ("update", function (e) {
 			self.config = e.data;
 			e.next ();
 		});
-
-		var configItem = self.link.item ("lic/config/" + self.name);
 
 		// Grab the current state of the config.
 		configItem.invoke ("get", null, function (config) {
