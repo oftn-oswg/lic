@@ -1,7 +1,8 @@
 var Connection = require ("./Connection.js");
 
-var IRCManager = function (config) {
+var IRCManager = function (config, event_manager) {
 	this.config = config;
+	this.event_manager = event_manager;
 	this.connections = [];
 };
 
@@ -23,14 +24,22 @@ IRCManager.prototype.connect = function () {
 	for (var i = 0, len = servers.length; i < len; i++) {
 
 		profile = this.create_profile (servers[i], defaults);
-		connection = new Connection (profile);
+		connection = new Connection (profile, this.event_manager);
 
-		///*
-		connection.on("raw", function (m) { console.log (m); });
+		///* The following section is a massive hack, used temporarily as a testing interface.
 		connection.on("001", function (message) {
 			this.raw ("JOIN #oftn");
-			var stdin = process.openStdin();
-			stdin.on('data', function(chunk) { connection.send ("PRIVMSG #oftn :"+chunk); });
+			var rl = require("readline");
+			var i = rl.createInterface(process.stdin, process.stdout, null);
+			i.on("line", function(line) {
+				connection.send ("PRIVMSG #oftn :" + line.trim());
+				doprmpt();
+			});
+			doprmpt();
+			function doprmpt() {
+				i.setPrompt ("<"+connection.nickname+"> ", connection.nickname.length + 3);
+				i.prompt ();
+			}
 		});
 		//*/
 	

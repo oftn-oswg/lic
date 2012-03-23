@@ -7,8 +7,11 @@ var HubConfig  = require ("./HubConfig.js");
 var IRCManager = require ("./irc/Manager.js");
 var Server     = require ("./Server.js");
 
+var EventManager = require ("./EventManager.js");
+
 var Hub = function () {
 	this.managers = [];
+	this.event_manager = new EventManager();
 };
 
 /**
@@ -76,7 +79,7 @@ Hub.prototype.shutdown = function () {
 Hub.prototype.start_chat = function () {
 	var irc;
 	
-	irc = new IRCManager (this.config);
+	irc = new IRCManager (this.config, this.event_manager);
 	irc.connect ();
 
 	this.managers.push (irc);

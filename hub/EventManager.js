@@ -5,7 +5,11 @@
  * with an EventManager instance. This is the main starting point
  * for all of the events.
  */
-var EventManager = function () {
+var EventManager = module.exports = function () {
+};
+
+EventManager.prototype.send = function(event) {
+	console.log (event.stringify ());
 };
 
 //EventManager

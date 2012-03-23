@@ -2,6 +2,8 @@ var util = require ("util");
 var net  = require ("net");
 var tls  = require ("tls");
 
+var Event = require ("../Event.js");
+
 /*
  * A special connection for handling the IRC protocol.
  * It is responsible for:
@@ -13,9 +15,10 @@ var tls  = require ("tls");
  * consult the README.
  */
 
-var IRCConnection = function (profile) {
+var IRCConnection = function (profile, event_manager) {
 
 	this.profile = profile;
+	this.event_manager = event_manager;
 
 	/* profile.host: The hostname of the IRC server to connect to */
 	this.host = profile.host || "localhost";
@@ -89,6 +92,7 @@ var IRCConnection = function (profile) {
 		data = this.parse_message (message);
 		if (data) {
 			this.emit (data.command, data);
+			this.event_manager.send (new Event(this.get_item_name (data), data.command, data));
 		}
 	}).bind (this));
 
@@ -103,6 +107,12 @@ var IRCConnection = function (profile) {
 };
 
 util.inherits (IRCConnection, process.EventEmitter);
+
+IRCConnection.prototype.get_item_name = function(data) {
+	// TODO: Make this specific to the items representing the channels.
+	// For now, we will just return irc/<name>
+	return "irc/" + this.name;
+};
 
 IRCConnection.prototype.connect = function() {
 	var connection, options, self;

@@ -1,4 +1,4 @@
-var Message = module.exports = function (item, type, data) {
+var Event = module.exports = function (item, type, data) {
 	this.item = item;
 	this.type = type;
 
@@ -9,6 +9,6 @@ var Message = module.exports = function (item, type, data) {
 	}
 };
 
-Message.prototype.stringify = function () {
+Event.prototype.stringify = function () {
 	return JSON.stringify (this);
 };
