@@ -14,20 +14,20 @@ var IRC = module.exports = function (link, name) {
 			self.respond (sender, command, args);
 		});
 
-		var configItem = self.link.item ("lic/config/" + self.name);
+		var config_item = self.link.item ("lic/config/" + self.name);
 
 		// Subscribe to any changes to our config.
-		configItem.subscribe ("update", function (e) {
+		config_item.subscribe ("update", function (e) {
 			self.config = e.data;
 			e.next ();
 		});
 
 		// Grab the current state of the config.
-		configItem.invoke ("get", null, function (config) {
+		config_item.invoke ("get", null, function (config) {
 			self.config = config;
 		}, function (error) {
 			// TODO: Include some defaults here.
-			configItem.invoke ("set", self.config = {});
+			config_item.invoke ("set", self.config = {});
 		});
 
 		self.connect ();
