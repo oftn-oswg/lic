@@ -6,11 +6,13 @@ var util = require ("util");
 var HubConfig  = require ("./HubConfig.js");
 var Server     = require ("./Server.js");
 
-var EventManager = require ("./EventManager.js");
+var EventManager   = require ("./EventManager.js");
+var CommandManager = require ("./CommandManager.js");
 
 var Hub = function () {
-	this.managers = [];
-	this.event_manager = new EventManager();
+	this.managers        = [];
+	this.event_manager   = new EventManager();
+	this.command_manager = new CommandManager();
 };
 
 /**
