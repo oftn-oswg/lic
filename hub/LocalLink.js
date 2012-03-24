@@ -40,6 +40,10 @@ Item.prototype.unsubscribe = function (type) {
 	this.hub.event_manager.remove_subscription (this.petal_name, this.id, type);
 };
 
+Item.prototype.publish = function (type, data) {
+	this.hub.event_manager.publish (this.id, type, data);
+};
+
 Item.prototype.invoke = function (command, args, success, error) {
 	this.hub.command_manager.dispatch (this.id, { name:  this.petal_name
 	                                            , reply: success
