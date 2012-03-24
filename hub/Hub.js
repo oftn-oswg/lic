@@ -4,7 +4,6 @@ var net  = require ("net");
 var util = require ("util");
 
 var HubConfig  = require ("./HubConfig.js");
-var IRCManager = require ("./irc/Manager.js");
 var Server     = require ("./Server.js");
 
 var EventManager = require ("./EventManager.js");
@@ -25,7 +24,6 @@ Hub.prototype.init = function () {
 	this.load_config (function (config) {
 		this.config = config;
 		this.start_server ();
-		this.start_chat ();
 	});
 
 };
@@ -76,19 +74,6 @@ Hub.prototype.shutdown = function () {
 	function exit () {
 		process.exit ();
 	}
-};
-
-/**
- * Hub.start_chat():
- * This opens up the IRC connections from the config
- **/
-Hub.prototype.start_chat = function () {
-	var irc;
-	
-	irc = new IRCManager (this.config, this.event_manager);
-	irc.connect ();
-
-	this.managers.push (irc);
 };
 
 module.exports = Hub;
