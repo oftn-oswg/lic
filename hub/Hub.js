@@ -11,8 +11,8 @@ var CommandManager = require ("./CommandManager.js");
 
 var Hub = function () {
 	this.managers        = [];
-	this.event_manager   = new EventManager();
-	this.command_manager = new CommandManager();
+	this.event_manager   = new EventManager ();
+	this.command_manager = new CommandManager (this);
 };
 
 /**
