@@ -98,7 +98,7 @@ IRC.prototype.disconnect = function (success) {
 		var c = connections.shift ();
 		if (!c) {
 			// There are no more connections to close.
-			success.call (self);
+			success ();
 			return;
 		}
 		c.quit (next);
