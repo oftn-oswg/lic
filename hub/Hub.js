@@ -1,18 +1,16 @@
 "use strict";
 
-var net  = require ("net");
-var util = require ("util");
-
-var HubConfig  = require ("./HubConfig.js");
-var Server     = require ("./Server.js");
-
+var HubConfig      = require ("./HubConfig.js");
+var Server         = require ("./Server.js");
+var LicProvider    = require ("./LicProvider.js");
 var EventManager   = require ("./EventManager.js");
 var CommandManager = require ("./CommandManager.js");
 
 var Hub = function () {
 	this.managers        = [];
 	this.event_manager   = new EventManager ();
-	this.command_manager = new CommandManager (this);
+	this.command_manager = new CommandManager ();
+	this.lic_provider    = new LicProvider (this);
 };
 
 /**
@@ -23,24 +21,13 @@ var Hub = function () {
  **/
 Hub.prototype.init = function () {
 
-	this.load_config (function (config) {
-		this.config = config;
-		this.start_server ();
+	this.config = new HubConfig (this.event_manager);
+
+	this.config.load (function () {
+		this.start_server ()
+		this.command_manager.providers["lic"] = this.lic_provider.respond;
 	});
 
-};
-
-
-/**
- * Hub.prototype.load_config():
- * This will scan directories for the config file and load it into memory.
- * The callback function will be called with the configuration data.
- **/
-Hub.prototype.load_config = function (callback) {
-	var config;
-
-	config = new HubConfig ();
-	config.load (callback, this);
 };
 
 /**
@@ -48,23 +35,22 @@ Hub.prototype.load_config = function (callback) {
  * This opens up a local socket and applies listeners.
  **/
 Hub.prototype.start_server = function () {
+	/*
 	console.log ("Starting up hub server");
 
 	this.server = new Server (this.config);
 	this.server.listen ();
+	*/
 };
 
 Hub.prototype.shutdown = function () {
 
 	console.log ("Shutting down");
 
-	// Close petal connections
-	this.server.close ();
-
-	// Tell each manager to shut down
+	// Tell each petal to disconnect
 	var num = this.managers.length;
-	this.managers.forEach (function (each) {
-		each.disconnect (function() {
+	this.petals.forEach (function (petal) {
+		petal.disconnect (function() {
 			num--;
 			if (!num) {
 				exit();
@@ -72,8 +58,11 @@ Hub.prototype.shutdown = function () {
 		});
 	});
 
+	setTimeout (function () { exit () }, 5000); // Exit forcefully if 5 s pass.
+
 	// Final termination code
 	function exit () {
+		//this.server.close ();
 		process.exit ();
 	}
 };
