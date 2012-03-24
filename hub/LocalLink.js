@@ -16,6 +16,16 @@ LocalLink.prototype.item = function (id) {
 	return new Item (this.hub, this.petalName, id);
 };
 
+LocalLink.prototype.provide = function (namespace, handler) {
+	this.hub.command_manager.defineProvider (this.petalName, namespace, handler);
+};
+
+LocalLink.prototype.unprovide = function (namespace) {
+	// If the provider of the namespace is not the petal identified by
+	// `petalName`, the provider will not be removed.
+	this.hub.command_manager.removeProvider (this.petalName, namespace);
+};
+
 var Item = function (hub, petalName, id) {
 	this.hub       = hub;
 	this.petalName = petalName;
