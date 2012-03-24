@@ -85,6 +85,7 @@ IRC.prototype.connect = function () {
 
 IRC.prototype.respond = function (sender, command, args) {
 	// TODO: Respond to MESSAGE, JOIN, and PART commands.
+	sender.error ({type: "NotSupported", description: "The requested method is not supported."});
 };
 
 IRC.prototype.disconnect = function (success) {
