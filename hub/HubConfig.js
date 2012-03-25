@@ -4,9 +4,11 @@ var fs        = require ("fs");
 var path      = require ("path");
 var FileUtils = require ("./FileUtils.js");
 
-var HubConfig = function (locations) {
+var HubConfig = function (event_manager) {
 
 	this.path = null;
+
+	this.event_manager = event_manager;
 
 	// lic defaults
 	this.data = {};
@@ -14,16 +16,12 @@ var HubConfig = function (locations) {
 	// lic Core namespace
 	this.data.Core = {};
 	this.data.Core.socket = "/tmp/lic.sock";
-
-	this.data.IRC = {};
-	this.data.IRC.default = {};
-	this.data.IRC.servers = [];
 };
 
 HubConfig.prototype.location = path.join (FileUtils.home (), ".lic", "config.json");
 
 
-HubConfig.prototype.load = function (callback, self) {
+HubConfig.prototype.load = function (callback) {
 	var location;
 
 	location = this.location;
@@ -34,7 +32,7 @@ HubConfig.prototype.load = function (callback, self) {
 			process.exit ();
 		}
 
-		callback.call (self, this);
+		callback();
 	});
 
 };
@@ -108,9 +106,8 @@ HubConfig.prototype.load_file = function (filename, callback) {
 
 		try {
 			// Try to parse the file as JSON
-			data = JSON.parse (json);
+			this.data = JSON.parse (json);
 
-			self.load_config_data (data);
 			callback.call (self, null);
 		} catch (e) {
 			console.error (String(e));
@@ -123,12 +120,12 @@ HubConfig.prototype.load_file = function (filename, callback) {
  * HubConfig#write_file():
  * Save the configuration data as-is to disk.
  **/
-HubConfig.prototype.write_file = function(file, callback) {
+HubConfig.prototype.write_file = function (file, callback) {
 	var data, self = this;
 
 	data = JSON.stringify (this.data, null, 4);
 
-	fs.writeFile (file, data, 'utf8', function(error) {
+	fs.writeFile (file, data, 'utf8', function (error) {
 		callback.call (self, error);
 	});
 };
