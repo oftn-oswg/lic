@@ -88,8 +88,6 @@ HubConfig.prototype.load_file = function (filename, callback) {
 	var self = this;
 
 	fs.readFile (filename, "utf8", function (error, json) {
-		var data;
-
 		if (error) {
 			self.create_config (filename, function(error) {
 				if (error) {
@@ -106,7 +104,7 @@ HubConfig.prototype.load_file = function (filename, callback) {
 
 		try {
 			// Try to parse the file as JSON
-			this.data = JSON.parse (json);
+			self.data = JSON.parse (json);
 
 			callback.call (self, null);
 		} catch (e) {
@@ -270,13 +268,15 @@ HubConfig.prototype.set = function (path, value, success, error) {
 	// We must then walk backwards and notify all parents of the key (but
 	// not their children).
 	while (true) {
-		this.event_manager.publish ("lic/config/" + keys.join ("/"), "update", values.pop ());
+		this.event_manager.publish ("lic/config" + (keys.length > 0 ? "/" : "") + keys.join ("/"), "update", values.pop ());
 		if (keys.length > 0) {
 			keys.pop ();
 		} else {
 			break;
 		}
 	}
+
+	success (true);
 };
 
 module.exports = HubConfig;
