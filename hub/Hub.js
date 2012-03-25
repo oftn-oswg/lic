@@ -21,11 +21,13 @@ var Hub = function () {
  **/
 Hub.prototype.init = function () {
 
+	var self = this;
+
 	this.config = new HubConfig (this.event_manager);
 
 	this.config.load (function () {
-		this.start_server ()
-		this.command_manager.providers["lic"] = this.lic_provider.respond;
+		self.start_server ()
+		self.command_manager.providers["lic"] = this.lic_provider.respond;
 	});
 
 };
