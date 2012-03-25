@@ -17,7 +17,10 @@ LocalLink.prototype.item = function (id) {
 };
 
 LocalLink.prototype.provide = function (namespace, handler) {
-	this.hub.command_manager.define_provider (this.petalName, namespace, handler);
+	var wrapped_handler = function (item, sender, command, args, success, error) {
+		handler (item, {name: sender, reply: success, error: error}, command, args);
+	};
+	this.hub.command_manager.define_provider (this.petalName, namespace, wrapped_handler);
 };
 
 LocalLink.prototype.unprovide = function (namespace) {
