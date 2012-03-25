@@ -145,6 +145,12 @@ HubConfig.prototype.respond = function (item, sender, command, args, success, er
 		}, function (error) {
 			error (error);
 		});
+	} else if (command.match (/^delete$/i)) {
+		this.delete (item.replace (/^lic\/config\//, ""), function () {
+			success (true);
+		}, function (error) {
+			error (error);
+		});
 	} else if (command.match (/^save$/i)) {
 		this.write_file (this.location, function () { success (true); });
 	} else if (command.match (/^load$/i)) {
@@ -204,6 +210,7 @@ HubConfig.prototype.set = function (path, value, success, error) {
 	var key
 	  , keys   = path.split ("/")
 	  , object = this.data
+		, self   = this
 	  ;
 
 	for (var i = 0; i < keys.length - 1; i++) {
@@ -247,9 +254,9 @@ HubConfig.prototype.set = function (path, value, success, error) {
 	// if the value is an object or array.
 	if (typeof object === "object") {
 		(function walk (object, path) {
-			for (k in object) {
+			for (var k in object) {
 				if (object.hasOwnProperty (k)) {
-					this.event_manager.publish ("lic/config/" + (path ? path + "/" : "") + k, "update", object[k]);
+					self.event_manager.publish ("lic/config/" + (path ? path + "/" : "") + k, "update", object[k]);
 					if (typeof object[k] === "object") {
 						walk (object[k], path + "/" + k);
 					}
@@ -257,6 +264,102 @@ HubConfig.prototype.set = function (path, value, success, error) {
 			}
 		}) (object, path);
 	}
+
+	// Prior to the next step, we need to build up a list of values
+	// for each part of the path.
+	var values = [this.data];
+	for (var i = 0; i < keys.length; i++) {
+		values.push (values[values.length - 1][keys[i]]);
+	}
+
+	// We must then walk backwards and notify all parents of the key (but
+	// not their children).
+	while (true) {
+		this.event_manager.publish ("lic/config" + (keys.length > 0 ? "/" : "") + keys.join ("/"), "update", values.pop ());
+		if (keys.length > 0) {
+			keys.pop ();
+		} else {
+			break;
+		}
+	}
+
+	success (true);
+};
+
+/**
+ * HubConfig#delete():
+ * Deletes a configuration key and publishes events on the
+ * affected items.
+ **/
+HubConfig.prototype.delete = function (path, success, error) {
+	success = success || function () {};
+	error   = error   || function () {};
+
+	var key
+	  , keys   = path.split ("/")
+	  , object = this.data
+		, self   = this
+	  ;
+
+	for (var i = 0; i < keys.length - 1; i++) {
+		key = keys[i];
+		if (object.constructor === Array) {
+			if (key.match (/^\d+$/)) {
+				if (object.hasOwnProperty (key)) {
+					object = object[key];
+				} else {
+					return error ({type: "NotFound", description: "The requested configuration key could not be found."});
+				}
+			} else {
+				return error ({type: "IndexError", description: "Attempted to access a non-numeric key of an array."});
+			}
+		} else if (typeof object === "object") {
+			if (object.hasOwnProperty (key)) {
+				object = object[key];
+			} else {
+				return error ({type: "NotFound", description: "The requested configuration key could not be found."});
+			}
+		} else {
+			return error ({type: "IndexError", description: "Attempted to index through a non-object value."});
+		}
+	}
+
+	key = keys[i];
+
+	var value = object[key];
+
+	if (object.constructor === Array) {
+		if (key.match (/^\d+/)) {
+			delete object[key];
+		} else {
+			return error ({type: "IndexError", description: "Attempted to access a non-numeric key of an array."});
+		}
+	} else if (typeof object === "object") {
+		delete object[key];
+	} else {
+		return error ({type: "IndexError", description: "Attempted to index through a non-object value."});
+	}
+
+	object = value;
+
+	// First we must notify all descendants of the key we just modified
+	// if the value is an object or array.
+	if (typeof object === "object") {
+		(function walk (object, path) {
+			for (var k in object) {
+				if (object.hasOwnProperty (k)) {
+					self.event_manager.publish ("lic/config/" + (path ? path + "/" : "") + k, "delete", null);
+					if (typeof object[k] === "object") {
+						walk (object[k], path + "/" + k);
+					}
+				}
+			}
+		}) (object, path);
+	}
+
+	// Notify of deletion of the key.
+	this.event_manager.publish ("lic/config" + (path ? "/" + path : ""), "delete", null);
+	keys.pop();
 
 	// Prior to the next step, we need to build up a list of values
 	// for each part of the path.
