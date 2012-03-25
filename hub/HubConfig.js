@@ -130,6 +130,29 @@ HubConfig.prototype.write_file = function (file, callback) {
 	});
 };
 
+/**
+ * HubConfig#respond():
+ * Responds to commands routed through the LicProvider.
+ **/
+HubConfig.prototype.respond = function (item, sender, command, args, success, error) {
+	if (command.match (/^get$/i)) {
+		this.get (item.replace (/^lic\/config\//, ""), function (value) {
+			success (value);
+		}, function (error) {
+			error (error);
+		});
+	} else if (command.match (/^set$/i)) {
+		this.set (item.replace (/^lic\/config\//, ""), args, function () {
+			success (true);
+		}, function (error) {
+			error (error);
+		});
+	} else if (command.match (/^save$/i)) {
+		this.write_file (this.location, function () { success (true); });
+	} else if (command.match (/^load$/i)) {
+		this.load_file (this.location, function () { success (true); });
+	}
+};
 
 HubConfig.prototype.load_config_data = function (data) {
 
