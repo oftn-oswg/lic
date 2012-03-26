@@ -1,9 +1,9 @@
 var Connection = require ("./Connection.js");
 
-var IRC = module.exports = function (link, name) {
+var IRC = module.exports = function (link, options) {
 	var self = this;
 
-	this.name = name || "irc";
+	this.name = options.name || "irc";
 	this.link = link;
 	this.connections = [];
 
