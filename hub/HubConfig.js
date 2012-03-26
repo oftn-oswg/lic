@@ -13,9 +13,10 @@ var HubConfig = function (event_manager) {
 	// lic defaults
 	this.data = {};
 
-	// lic Core namespace
-	this.data.Core = {};
-	this.data.Core.socket = "/tmp/lic.sock";
+	// lic provider
+	this.data.lic            = {};
+	this.data.lic.interfaces = ["unix:/tmp/lic.sock"];
+	this.data.lic.routes     = {};
 };
 
 HubConfig.prototype.location = path.join (FileUtils.home (), ".lic", "config.json");
