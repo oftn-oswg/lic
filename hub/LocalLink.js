@@ -36,11 +36,18 @@ var Item = function (hub, petal_name, id) {
 };
 
 Item.prototype.subscribe = function (type, handler) {
-	this.hub.event_manager.add_subscription (this.petal_name, this.id, type, handler);
+	var self = this;
+
+	var wrapped_handler = function (item, type, data) {
+		handler ({item: item, type: type, data: data, next: function () {
+			self.hub.event_manager.next (self.petal_name, this.item, this.type, this.data);
+		}});
+	};
+	this.hub.event_manager.subscribe (this.petal_name, this.id, type, wrapped_handler);
 };
 
 Item.prototype.unsubscribe = function (type) {
-	this.hub.event_manager.remove_subscription (this.petal_name, this.id, type);
+	this.hub.event_manager.unsubscribe (this.petal_name, this.id, type);
 };
 
 Item.prototype.publish = function (type, data) {

@@ -8,9 +8,10 @@ var CommandManager = require ("./CommandManager.js");
 
 var Hub = function () {
 	this.managers        = [];
-	this.event_manager   = new EventManager ();
+	this.event_manager   = new EventManager (this);
 	this.command_manager = new CommandManager ();
 	this.lic_provider    = new LicProvider (this);
+	this.config          = new HubConfig (this.event_manager);
 };
 
 /**
@@ -23,11 +24,10 @@ Hub.prototype.init = function () {
 
 	var self = this;
 
-	this.config = new HubConfig (this.event_manager);
-
 	this.config.load (function () {
-		self.start_server ()
 		self.command_manager.providers["lic"] = this.lic_provider.respond;
+		self.config.get ("lic/config/lic/routes", function (t) { self.event_manager.load_tree (t) });
+		self.start_server ();
 	});
 
 };
