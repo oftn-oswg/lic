@@ -29,8 +29,11 @@ EventManager.prototype.load_tree = function (tree) {
 EventManager.prototype.publish = function (item, type, data) {
 	if (typeof data === "undefined") data = null;
 
-	var itemMD = item.match (/^([^\/]*)(.*)$/);
-	console.log ("\033[35m" + itemMD[1] + "\033[36m" + itemMD[2] + "\033[1;33m\t" + type + "\033[0m\t" + JSON.stringify (data));
+	var itemMD  = item.match (/^([^\/]*)(.*)$/)
+	  , datastr = JSON.stringify (data)
+	  ;
+
+	console.log ("\033[35m" + itemMD[1] + "\033[36m" + itemMD[2] + "\033[1;33m\t" + type + "\033[0m\t" + datastr);
 
 	// Bash-style asterisk rules.
 	function glob_match (glob, target) {
@@ -66,7 +69,7 @@ EventManager.prototype.publish = function (item, type, data) {
 
 						if (!this.nonRoots.hasOwnProperty (o.petal_name)) {
 							console.log ("[DEBUG] sending to " + o.petal_name + " who requested " + s_item + "!" + s_type);
-							o.handle (item, type, data);
+							o.handle (item.slice (), type.slice (), JSON.parse (datastr));
 						}
 					}
 				}
@@ -77,7 +80,10 @@ EventManager.prototype.publish = function (item, type, data) {
 
 EventManager.prototype.next = function (petal_name, item, type, data) {
 	if (this.tree.hasOwnProperty (petal_name)) {
-		var nexts = this.tree[petal_name];
+		var nexts   = this.tree[petal_name]
+		  , rem     = nexts.slice()
+		  , datastr = JSON.stringify (data) || "null"
+		  ;
 
 		function glob_match (glob, target) {
 			return !!target.match (new RegExp ("^" + glob.replace (/[-[\]{}()+?.,\\^$|#\s]/g, "\\$&")
@@ -98,12 +104,20 @@ EventManager.prototype.next = function (petal_name, item, type, data) {
 
 							if (nexts.indexOf (o.petal_name) > -1) {
 								console.log ("[DEBUG] next() from " + petal_name + " to " + o.petal_name + " who requested " + s_item + "!" + s_type);
-								o.handle (item, type, data);
+								o.handle (item.slice(), type.slice(), JSON.parse (datastr));
+
+								if (rem.indexOf (o.petal_name) > -1) rem.splice (rem.indexOf (o.petal_name), 1);
 							}
 						}
 					}
 				}
 			}
+		}
+
+		// Petals that did not intercept the event should be passed through.
+		for (var i = 0; i < rem.length; i++) {
+			console.log ("[DEBUG] next() from " + petal_name + " passing through " + rem[i]);
+			this.next (rem[i], item, type, data);
 		}
 	}
 };
