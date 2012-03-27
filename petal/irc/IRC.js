@@ -57,23 +57,6 @@ IRC.prototype.connect = function () {
 		profile = this.create_profile (name, servers[name], defaults);
 		connection = new Connection (profile, this.link);
 
-		/* The following section is a massive hack, used temporarily as a testing interface.
-		connection.on("001", function (message) {
-			this.raw ("JOIN #oftn");
-			var rl = require("readline");
-			var i = rl.createInterface(process.stdin, process.stdout, null);
-			i.on("line", function(line) {
-				connection.send ("PRIVMSG #oftn :" + line.trim());
-				doprmpt();
-			});
-			doprmpt();
-			function doprmpt() {
-				i.setPrompt ("<"+connection.nickname+"> ", connection.nickname.length + 3);
-				i.prompt ();
-			}
-		});
-		*/
-
 		connection.on ("001", function (message) {
 			if (typeof profile.autojoin === 'object' && profile.autojoin.constructor === Array) {
 				profile.autojoin.forEach (function (chan) {
