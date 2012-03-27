@@ -17,8 +17,8 @@ CommandManager.prototype.remove_provider = function (namespace) {
 };
 
 CommandManager.prototype.dispatch = function (item, command, data, success, error) {
-	success = success || function () {};
-	error   = error   || function () {};
+	if (!success || success.constructor !== Function) success = function () {};
+	if (!error   || error.constructor   !== Function) error   = function () {};
 
 	var itemParts = item.match (/^([^\/]*)(.*)$/);
 
