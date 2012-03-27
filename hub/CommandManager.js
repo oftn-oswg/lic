@@ -1,11 +1,11 @@
-//var LicProvider = require ("./LicProvider.js");
+var LicProvider = require ("./LicProvider.js");
 
 var CommandManager = function (hub) {
 	this.hub       = hub;
 	this.providers = {};
 
-	//this.licProvider   = new LicProvider (this.hub);
-	//this.providers.lic = this.licProvider.respond.bind (this.licProvider);
+	this.licProvider   = new LicProvider (this.hub);
+	this.providers.lic = this.licProvider.respond.bind (this.licProvider);
 };
 
 CommandManager.prototype.define_provider = function (namespace, handler) {
@@ -17,6 +17,9 @@ CommandManager.prototype.remove_provider = function (namespace) {
 };
 
 CommandManager.prototype.dispatch = function (item, command, data, success, error) {
+	success = success || function () {};
+	error   = error   || function () {};
+
 	var itemParts = item.match (/^([^\/]*)(.*)$/);
 
 	function log_success (value) {
@@ -39,3 +42,5 @@ CommandManager.prototype.dispatch = function (item, command, data, success, erro
 		log_error ({type: "NoProvider", description: "There is no connected petal capable of handling the request."});
 	}
 };
+
+module.exports = CommandManager;

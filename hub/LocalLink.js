@@ -12,9 +12,11 @@ LocalLink.prototype.register = function (name, connect, disconnect)  {
 
 		connect ();
 	}, function (success) {
-		disconnect ();
 
-		self.connected  = false;
+		disconnect (function () {
+			self.connected = false;
+			success ();
+		});
 	});
 };
 
@@ -56,9 +58,7 @@ Item.prototype.publish = function (type, data) {
 };
 
 Item.prototype.invoke = function (command, args, success, error) {
-	this.hub.command_manager.dispatch (this.id, { name:  this.petal_name
-	                                            , reply: success
-	                                            , error: error }, command, args);
+	this.hub.command_manager.dispatch (this.id, command, args, success, error);
 };
 
 module.exports = LocalLink;

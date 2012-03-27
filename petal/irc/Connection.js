@@ -2,8 +2,6 @@ var util = require ("util");
 var net  = require ("net");
 var tls  = require ("tls");
 
-var Event = require ("../Event.js");
-
 /*
  * A special connection for handling the IRC protocol.
  * It is responsible for:
@@ -15,10 +13,10 @@ var Event = require ("../Event.js");
  * consult the README.
  */
 
-var IRCConnection = function (profile, event_manager) {
+var IRCConnection = function (profile, link) {
 
 	this.profile = profile;
-	this.event_manager = event_manager;
+	this.link    = link;
 
 	/* profile.host: The hostname of the IRC server to connect to */
 	this.host = profile.host || "localhost";
@@ -91,8 +89,16 @@ var IRCConnection = function (profile, event_manager) {
 
 		data = this.parse_message (message);
 		if (data) {
+			//console.log (data);
 			this.emit (data.command, data);
-			this.event_manager.send (new Event(this.get_item_name (data), data.command, data));
+
+			if (data.command === "PRIVMSG") {
+				var sender = data.prefix.match (/^[^!]+/)[0];
+				this.link.item (this.get_item_name (data)).publish ("message", {sender: sender, body: data.message});
+			} else if (data.command === "JOIN" || data.command === "PART") {
+				var who = data.prefix.match (/^[^!]+/)[0];
+				this.link.item (this.get_item_name (data)).publish (data.command.toLowerCase (), who);
+			}
 		}
 	}).bind (this));
 
@@ -111,7 +117,7 @@ util.inherits (IRCConnection, process.EventEmitter);
 IRCConnection.prototype.get_item_name = function(data) {
 	// TODO: Make this specific to the items representing the channels.
 	// For now, we will just return irc/<name>
-	return "irc/" + this.name;
+	return "irc/" + this.name + "/" + data.params[0];
 };
 
 IRCConnection.prototype.connect = function() {
@@ -276,7 +282,7 @@ IRCConnection.prototype.raw = function (message) {
 	}
 	this.connection.write (message + "\r\n", this.encoding);
 
-	console.log("\x1b[32m" + message + "\x1b[m");
+	//console.log("\x1b[32m" + message + "\x1b[m");
 
 	this.message_time = Date.now ();
 	return true;

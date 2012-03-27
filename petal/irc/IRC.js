@@ -5,7 +5,7 @@ var IRC = module.exports = function (link, options) {
 
 	this.name = options.name || "irc";
 	this.link = link;
-	this.connections = [];
+	this.connections = {};
 
 	this.link.register (this.name, function () {
 
@@ -23,12 +23,11 @@ var IRC = module.exports = function (link, options) {
 		// Grab the current state of the config.
 		config_item.invoke ("get", null, function (config) {
 			self.config = config;
+			self.connect ();
 		}, function (error) {
 			// TODO: Include some defaults here.
 			config_item.invoke ("set", self.config = {});
 		});
-
-		self.connect ();
 
 	}, function (success) {
 
@@ -47,10 +46,10 @@ IRC.prototype.create_profile = function (profile, defaults) {
 };
 
 IRC.prototype.connect = function () {
-	var connection, profile, servers, defaults;
+	var connection, profile, servers, defaults, link = this.link;
 
 	servers  = this.config.servers;
-	defaults = this.config.default;
+	defaults = this.config.defaults;
 
 	for (var i = 0, len = servers.length; i < len; i++) {
 
@@ -73,33 +72,65 @@ IRC.prototype.connect = function () {
 			}
 		});
 		*/
+
+		connection.on ("001", function (message) {
+			if (typeof profile.autojoin === 'object' && profile.autojoin.constructor === Array) {
+				profile.autojoin.forEach (function (chan) {
+					connection.raw ("JOIN " + chan.replace (/[\r\n ]/g, ""));
+				});
+			}
+		});
 	
 		console.log ("[" + this.name + "] Connecting to IRC server \"%s\"", connection.name);
 		connection.connect ();
 
-		this.connections.push (connection);
+		this.connections[connection.name] = connection;
 	}
 };
 
 IRC.prototype.respond = function (item, command, data, success, error) {
-	// TODO: Respond to MESSAGE, JOIN, and PART commands.
-	error ({type: "NotSupported", description: "The requested method is not supported."});
+	var itemChannel = item.match (/^[^\/]+\/([^\/]+)\/([^\/]+)$/);
+
+	if (itemChannel && this.connections.hasOwnProperty (itemChannel[1])) {
+		if (command.match (/^message$/i)) {
+			if (data.toString ().trim ()) {
+				this.connections[itemChannel[1]].send ("PRIVMSG " + itemChannel[2].trim() + " :" + data.toString ().trim ());
+				success (true);
+			} else {
+				error ({type: "EmptyMessage", description: "The message is empty. Will not send."});
+			}
+		} else if (command.match (/^join$/i)) {
+			this.connections[itemChannel[1]].send ("JOIN " + itemChannel[2].trim());
+			success (true);
+		} else if (command.match (/^part$/i)) {
+			this.connections[itemChannel[1]].send ("PART " + itemChannel[2].trim());
+			success (true);
+		} else {
+			error ({type: "NotSupported", description: "The requested method is not supported."});
+		}
+	} else {
+		error ({type: "NotFound", description: "The requested item does not exist."});
+	}
 };
 
 IRC.prototype.disconnect = function (success) {
 	var connections, self = this;
 
-	// First we clone the connections array to use as a queue
-	connections = this.connections.slice ();
 	console.log ("[" + this.name + "] Waiting for servers to close connections...");
+
+	connections = [];
+	for (var c in this.connections) {
+		if (this.connections.hasOwnProperty (c)) connections.push (c);
+	}
 
 	(function next () {
 		var c = connections.shift ();
 		if (!c) {
 			// There are no more connections to close.
+			self.connections = {};
 			success ();
 			return;
 		}
-		c.quit (next);
+		self.connections[c].quit (next);
 	}) ();
 };
