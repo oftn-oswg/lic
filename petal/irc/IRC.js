@@ -40,8 +40,8 @@ var IRC = module.exports = function (link, options) {
  * it with the defaults from the config so that when the defaults
  * change or the server profile changes, it will updated as such
  */
-IRC.prototype.create_profile = function (profile, defaults) {
-	profile.__proto__ = defaults;
+IRC.prototype.create_profile = function (name, profile, defaults) {
+	profile.__proto__ = {name: name, __proto__: defaults};
 	return profile;
 };
 
@@ -51,9 +51,10 @@ IRC.prototype.connect = function () {
 	servers  = this.config.servers;
 	defaults = this.config.defaults;
 
-	for (var i = 0, len = servers.length; i < len; i++) {
+	for (var name in servers) {
+		if (!servers.hasOwnProperty (name)) continue;
 
-		profile = this.create_profile (servers[i], defaults);
+		profile = this.create_profile (name, servers[name], defaults);
 		connection = new Connection (profile, this.link);
 
 		/* The following section is a massive hack, used temporarily as a testing interface.
