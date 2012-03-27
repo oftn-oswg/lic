@@ -138,20 +138,20 @@ HubConfig.prototype.respond = function (item, command, data, success, error) {
 	if (command.match (/^get$/i)) {
 		this.get (item.replace (/^lic\/config\//, ""), function (value) {
 			success (value);
-		}, function (error) {
-			error (error);
+		}, function (value) {
+			error (value);
 		});
 	} else if (command.match (/^set$/i)) {
-		this.set (item.replace (/^lic\/config\//, ""), args, function () {
+		this.set (item.replace (/^lic\/config\//, ""), data, function () {
 			success (true);
-		}, function (error) {
-			error (error);
+		}, function (value) {
+			error (value);
 		});
 	} else if (command.match (/^delete$/i)) {
 		this.delete (item.replace (/^lic\/config\//, ""), function () {
 			success (true);
-		}, function (error) {
-			error (error);
+		}, function (value) {
+			error (value);
 		});
 	} else if (command.match (/^save$/i)) {
 		this.write_file (this.location, function () { success (true); });
