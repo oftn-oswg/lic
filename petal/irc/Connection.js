@@ -87,6 +87,8 @@ var IRCConnection = function (profile, link) {
 	this.on ("raw", (function (message) {
 		var data;
 
+		//console.log ("\033[34m" + message + "\033[0m");
+
 		data = this.parse_message (message);
 		if (data) {
 			//console.log (data);
