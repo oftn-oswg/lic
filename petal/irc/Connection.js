@@ -149,7 +149,7 @@ IRCConnection.prototype.connect = function() {
 		connection.on ("connect",   function()     { self.emit ("connect"); });
 		connection.on ("data",      function(data) { self.emit ("data", data); });
 		connection.on ("close",     function(err)  { self.emit ("close", err); });
-		connection.on ("error",     function()     { self.emit ("error"); });
+		connection.on ("error",     function(err)  { self.emit ("error", err); });
 		connection.on ("timeout",   function()     { self.emit ("timeout"); });
 
 		self.connection = connection;
