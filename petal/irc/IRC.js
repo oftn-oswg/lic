@@ -10,9 +10,7 @@ var IRC = module.exports = function (link, options) {
 	this.link.register (this.name, function () {
 
 		// Respond to commands on items we own.
-		self.link.provide (self.name, function (item, sender, command, args) {
-			self.respond (item, sender, command, args);
-		});
+		self.link.respond (self.respond.bind (self));
 
 		var config_item = self.link.item ("lic/config/" + self.name);
 
@@ -83,9 +81,9 @@ IRC.prototype.connect = function () {
 	}
 };
 
-IRC.prototype.respond = function (item, sender, command, args) {
+IRC.prototype.respond = function (item, command, data, success, error) {
 	// TODO: Respond to MESSAGE, JOIN, and PART commands.
-	sender.error ({type: "NotSupported", description: "The requested method is not supported."});
+	error ({type: "NotSupported", description: "The requested method is not supported."});
 };
 
 IRC.prototype.disconnect = function (success) {

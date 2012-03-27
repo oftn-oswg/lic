@@ -4,8 +4,18 @@ var LocalLink = function (hub, petal) {
 };
 
 LocalLink.prototype.register = function (name, connect, disconnect)  {
-	this.hub.register_petal (name, connect, disconnect);
-	this.petal_name = name;
+	var self = this;
+
+	this.hub.register_petal (name, function () {
+		self.connected  = true;
+		self.petal_name = name;
+
+		connect ();
+	}, function (success) {
+		disconnect ();
+
+		self.connected  = false;
+	});
 };
 
 LocalLink.prototype.disconnect = function () {
@@ -16,17 +26,8 @@ LocalLink.prototype.item = function (id) {
 	return new Item (this.hub, this.petal_name, id);
 };
 
-LocalLink.prototype.provide = function (namespace, handler) {
-	var wrapped_handler = function (item, sender, command, args, success, error) {
-		handler (item, {name: sender, reply: success, error: error}, command, args);
-	};
-	this.hub.command_manager.define_provider (this.petalName, namespace, wrapped_handler);
-};
-
-LocalLink.prototype.unprovide = function (namespace) {
-	// If the provider of the namespace is not the petal identified by
-	// `petalName`, the provider will not be removed.
-	this.hub.command_manager.remove_provider (this.petalName, namespace);
+LocalLink.prototype.respond = function (handler) {
+	this.hub.command_manager.define_provider (this.petal_name, handler);
 };
 
 var Item = function (hub, petal_name, id) {

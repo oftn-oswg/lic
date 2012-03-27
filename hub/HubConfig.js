@@ -134,7 +134,7 @@ HubConfig.prototype.write_file = function (file, callback) {
  * HubConfig#respond():
  * Responds to commands routed through the LicProvider.
  **/
-HubConfig.prototype.respond = function (item, sender, command, args, success, error) {
+HubConfig.prototype.respond = function (item, command, data, success, error) {
 	if (command.match (/^get$/i)) {
 		this.get (item.replace (/^lic\/config\//, ""), function (value) {
 			success (value);

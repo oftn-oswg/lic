@@ -2,15 +2,13 @@
 
 var HubConfig      = require ("./HubConfig.js");
 var Server         = require ("./Server.js");
-var LicProvider    = require ("./LicProvider.js");
 var EventManager   = require ("./EventManager.js");
 var CommandManager = require ("./CommandManager.js");
 
 var Hub = function () {
-	this.managers        = [];
+	this.petals          = {};
 	this.event_manager   = new EventManager (this);
-	this.command_manager = new CommandManager ();
-	this.lic_provider    = new LicProvider (this);
+	this.command_manager = new CommandManager (this);
 	this.config          = new HubConfig (this.event_manager);
 };
 
@@ -25,7 +23,6 @@ Hub.prototype.init = function () {
 	var self = this;
 
 	this.config.load (function () {
-		self.command_manager.providers["lic"] = this.lic_provider.respond;
 		self.config.get ("lic/config/lic/routes", function (t) { self.event_manager.load_tree (t) });
 		self.start_server ();
 	});
