@@ -16,7 +16,7 @@ var HubConfig = function (event_manager) {
 	// lic provider
 	this.data.lic            = {};
 	this.data.lic.autoload   = [];                     // List of Hub scripts (in-process petals) to autoload.
-	this.data.lic.autostart  = [];                     // List of executable scripts to run automatically upon Hub startup.
+	this.data.lic.autoexec   = [];                     // List of executable scripts to run automatically upon Hub startup.
 	this.data.lic.interfaces = ["unix:/tmp/lic.sock"]; // List of network interfaces to accept connections on.
 	                                                   //   Acceptable values: unix:<path>, tcp:host:port, tcp-ssl:host:port
 	this.data.lic.password   = "";                     // If non-empty, out-of-process petals need to authenticate with the
