@@ -5,6 +5,7 @@ var Server         = require ("./Server.js");
 var EventManager   = require ("./EventManager.js");
 var CommandManager = require ("./CommandManager.js");
 var LocalLink      = require ("./LocalLink.js");
+var FileUtils      = require ("./FileUtils.js");
 
 var Hub = function () {
 	this.petals          = {};
@@ -101,16 +102,33 @@ Hub.prototype.disconnect_petal = function (petal_name, callback) {
 };
 
 Hub.prototype.load_petal = function (path, success, error) {
-	try {
-		var link = new LocalLink (this);
+	var def  = require ("path").join (FileUtils.home (), ".lic/petals")
+	  , self = this
+	  ;
 
-		if (success) link.once ("connect", success);
+	function load (path) {
+		try {
+			var link = new LocalLink (self);
 
-		link.petal = new (require (path)) (link, {});
-	} catch (e) {
-		console.error ("[WARN] failed to load " + path + ": " + e);
-		if (error) error (e);
+			if (success) link.once ("connect", success);
+
+			link.petal = new (require (path)) (link, {});
+		} catch (e) {
+			console.error ("[WARN] failed to load " + path + ": " + e);
+			if (error) error (e);
+		}
 	}
+
+	this.config.get ("lic/load_path", function (value) {
+		if (value) {
+			load (require ("path").resolve (value, path));
+		} else {
+			load (require ("path").resolve (def, path));
+		}
+	}, function () {
+		self.config.set ("lic/load_path", def);
+		load (require ("path").resolve (def, path));
+	});
 };
 
 Hub.prototype.shutdown = function () {
