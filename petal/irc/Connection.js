@@ -95,10 +95,10 @@ var IRCConnection = function (profile, link) {
 			this.emit (data.command, data);
 
 			if (data.command === "PRIVMSG") {
-				var sender = data.prefix.match (/^[^!]+/)[0];
+				var sender = data.prefix.match (/^\:([^!]+)/)[1];
 				this.link.item (this.get_item_name (data)).publish ("message", {sender: sender, body: data.message});
 			} else if (data.command === "JOIN" || data.command === "PART") {
-				var who = data.prefix.match (/^[^!]+/)[0];
+				var who = data.prefix.match (/^\:([^!]+)/)[1];
 				this.link.item (this.get_item_name (data)).publish (data.command.toLowerCase (), who);
 			}
 		}
