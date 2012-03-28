@@ -78,7 +78,7 @@ IRC.prototype.respond = function (item, command, data, success, error) {
 	if (itemChannel && this.connections.hasOwnProperty (itemChannel[1])) {
 		if (command.match (/^message$/i)) {
 			if (data.toString ().trim ()) {
-				this.connections[itemChannel[1]].send ("PRIVMSG " + itemChannel[2].trim() + " :" + data.toString ().trim ());
+				this.connections[itemChannel[1]].send ("PRIVMSG " + itemChannel[2].trim() + " :" + ("" + data).trim ());
 				success (true);
 			} else {
 				error ({type: "EmptyMessage", description: "The message is empty. Will not send."});
