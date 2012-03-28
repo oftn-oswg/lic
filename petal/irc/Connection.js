@@ -204,14 +204,15 @@ IRCConnection.prototype.quit = function (callback) {
 
 	this.raw ("QUIT" + (quit_message ? " :" + quit_message : ""));
 
-	this.connection.once ("end", function () {
-		callback.call (self);
-	});
-
-	setTimeout (function () {
+	var timeout = setTimeout (function () {
 		self.connection.end ();
 		callback.call (self);
 	}, 10000);
+
+	this.connection.once ("end", function () {
+		clearTimeout (timeout);
+		callback.call (self);
+	});
 };
 
 IRCConnection.prototype.parse_message = function(incoming) {

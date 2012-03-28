@@ -3,18 +3,22 @@ var LocalLink = function (hub, petal) {
 	this.petal = petal;
 };
 
+require ("util").inherits (LocalLink, process.EventEmitter);
+
 LocalLink.prototype.register = function (name, connect, disconnect)  {
 	var self = this;
 
 	this.hub.register_petal (name, function () {
 		self.connected  = true;
 		self.petal_name = name;
+		self.emit ("connect");
 
 		connect ();
 	}, function (success) {
 
 		disconnect (function () {
 			self.connected = false;
+			self.emit ("disconnect");
 			success ();
 		});
 	});

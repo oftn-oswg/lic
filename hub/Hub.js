@@ -26,7 +26,6 @@ Hub.prototype.init = function () {
 	this.config.load (function () {
 		self.config.get ("lic/config/lic/routes", function (t) { self.event_manager.load_tree (t) });
 		self.start_server ();
-		self.load_petal ("../petal/irc/IRC.js");
 
 		///* Test interface
 		process.nextTick (function () {
@@ -82,7 +81,7 @@ Hub.prototype.register_petal = function (petal_name, connect, disconnect) {
 	}
 };
 
-Hub.prototype.disconnect_petal = function (petal_name) {
+Hub.prototype.disconnect_petal = function (petal_name, callback) {
 	var self = this;
 
 	if (this.petals.hasOwnProperty (petal_name)) {
@@ -95,18 +94,22 @@ Hub.prototype.disconnect_petal = function (petal_name) {
 			delete self.petals[petal_name];
 
 			console.log ("[DEBUG] petal disconnected: " + petal_name);
+
+			if (callback) callback ();
 		});
 	}
 };
 
-Hub.prototype.load_petal = function (path) {
+Hub.prototype.load_petal = function (path, success, error) {
 	try {
-		var link  = new LocalLink (this)
-		  , petal = new (require (path)) (link, {})
-		  ;
-		link.petal = petal;
+		var link = new LocalLink (this);
+
+		if (success) link.once ("connect", success);
+
+		link.petal = new (require (path)) (link, {});
 	} catch (e) {
 		console.error ("[WARN] failed to load " + path + ": " + e);
+		if (error) error (e);
 	}
 };
 
@@ -129,7 +132,12 @@ Hub.prototype.shutdown = function () {
 		}
 	}
 
-	setTimeout (function () { exit () }, 5000); // Exit forcefully if 5 s pass.
+	if (!num) {
+		exit (); // Exit now if all petals have already disconnected
+		         // (or, more likely, if there were none in the first place).
+	} else {
+		setTimeout (function () { exit () }, 5000); // Exit forcefully if 5 s pass.
+	}
 
 	// Final termination code
 	function exit () {
