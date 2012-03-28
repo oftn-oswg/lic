@@ -39,7 +39,14 @@ Hub.prototype.init = function () {
 				} else if (md = line.match (/^\/to (.*)/)) {
 					to = md[1].trim ();
 				} else if (md = line.match (/^\/(?:([^ :]+)\:)?([^ ]+)(?: (.*)|$)/)) {
-					if (to) self.command_manager.dispatch (md[1] || to, md[2].trim(), JSON.parse (md[3]||"null"));
+					var data;
+
+					try {
+						data = JSON.parse (md[3]||"null");
+					} catch (e) {
+						data = md[3];
+					}
+					if (to) self.command_manager.dispatch (md[1] || to, md[2].trim(), data);
 				} else {
 					if (to) self.command_manager.dispatch (to, "message", line.trim());
 				}

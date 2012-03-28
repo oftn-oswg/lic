@@ -33,7 +33,15 @@ LocalLink.prototype.item = function (id) {
 };
 
 LocalLink.prototype.respond = function (handler) {
-	this.hub.command_manager.define_provider (this.petal_name, handler);
+	var wrapped_handler = function (item, command, data, success, error) {
+		try {
+			handler (item, command, data, success, error);
+		} catch (e) {
+			error ({type: "NativeException", description: "" + e});
+		}
+	};
+
+	this.hub.command_manager.define_provider (this.petal_name, wrapped_handler);
 };
 
 var Item = function (hub, petal_name, id) {
@@ -46,9 +54,13 @@ Item.prototype.subscribe = function (type, handler) {
 	var self = this;
 
 	var wrapped_handler = function (item, type, data) {
-		handler ({item: item, type: type, data: data, next: function () {
-			self.hub.event_manager.next (self.petal_name, this.item, this.type, this.data);
-		}});
+		try {
+			handler ({item: item, type: type, data: data, next: function () {
+				self.hub.event_manager.next (self.petal_name, this.item, this.type, this.data);
+			}});
+		} catch (e) {
+			console.error ("[WARN] in " + self.petal_name + ": " + e);
+		}
 	};
 	this.hub.event_manager.subscribe (this.petal_name, this.id, type, wrapped_handler);
 };
