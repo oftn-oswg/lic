@@ -15,3 +15,5 @@ Petal.prototype.shutdown = function (callback) {
 		callback.call (this);
 	}
 };
+
+module.exports = Petal;

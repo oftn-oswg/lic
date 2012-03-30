@@ -1,19 +1,44 @@
 var util = require ("util");
 
-/* ItemManager:
+/**
+ * ItemManager:
  * This object is the main router for all of lic's events.
  * Petals like the IRC manager will register all of its events
  * with the ItemManager instance belonging to the hub.
  * This is the main starting point for all of the events.
- */
-var ItemManager = module.exports = function () {
+ **/
+var ItemManager = function () {
 	this.listener_tree = {};
 };
 
-ItemManager.prototype.send = function(event) {
+
+
+
+// EVENTS ---------------------------------------
+
+ItemManager.prototype.publish = function(event) {
+	// TODO: To be implemented.
 	util.puts (util.inspect (event, false, 2, true));
 };
 
+ItemManager.prototype.subscribe = function(items) {
+	// TODO: To be implemented.
+};
+
+
+
+
+// COMMANDS -------------------------------------
+
+/**
+ * ItemManager#listen:
+ * This is used by item providers to
+ * listen for commands on items they own.
+ *
+ * Multiple listeners can be attached to the
+ * same item and from any petal, so care
+ * should be taken.
+ **/
 ItemManager.prototype.listen = function(items, listener, callback) {
 	if (Array.isArray (items)) {
 		if (typeof items[0] === "string") {
@@ -54,3 +79,13 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 		}
 	}
 };
+
+ItemManager.prototype.command = function(item, command) {
+	var args;
+	
+	args = Array.prototype.slice.call (arguments, 1);
+	
+	// TODO: Find listeners for item in listener_tree and call them with `args`
+};
+
+module.exports = ItemManager;

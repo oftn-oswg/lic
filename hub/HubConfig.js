@@ -14,10 +14,10 @@ var FileUtils = require ("./FileUtils.js");
  * petals to access, update, and modify global configuration.
  **/
 
-var HubConfig = function () {
+var HubConfig = function (item_manager, path) {
 	Petal.call (this);
 
-	this.path = null;
+	this.path = path;
 
 	// lic defaults
 	this.data = {};
@@ -33,13 +33,11 @@ var HubConfig = function () {
 
 util.inherits (HubConfig, Petal);
 
-HubConfig.prototype.location = path.join (FileUtils.home (), ".lic", "config.json");
 
-
-HubConfig.prototype.load = function (callback, self) {
+HubConfig.prototype.load = function (callback) {
 	var location;
 
-	location = this.location;
+	location = this.path;
 
 	this.load_file (location, function (error) {
 		if (error) {
@@ -47,7 +45,9 @@ HubConfig.prototype.load = function (callback, self) {
 			process.exit ();
 		}
 
-		callback.call (self, this);
+		if (callback) {
+			callback.call (this);
+		}
 	});
 
 };
@@ -175,7 +175,7 @@ HubConfig.prototype.load_config_data = function (data) {
  * It writes changes in the configuration to disk and calls the callback.
  **/
 HubConfig.prototype.shutdown = function(callback) {
-	this.write_file (this.location, function(error) {
+	this.write_file (this.path, function(error) {
 		if (callback) {
 			callback.call (this, error);
 		}
