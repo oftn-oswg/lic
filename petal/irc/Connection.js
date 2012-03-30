@@ -111,7 +111,7 @@ util.inherits (IRCConnection, process.EventEmitter);
 IRCConnection.prototype.get_item_name = function(data) {
 	// TODO: Make this specific to the items representing the channels.
 	// For now, we will just return irc/<name>
-	return "irc/" + this.name;
+	return ["irc", this.name];
 };
 
 IRCConnection.prototype.connect = function() {
