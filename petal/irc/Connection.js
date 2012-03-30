@@ -15,10 +15,10 @@ var Event = require ("../Event.js");
  * consult the README.
  */
 
-var IRCConnection = function (profile, event_manager) {
+var IRCConnection = function (profile, item_manager) {
 
 	this.profile = profile;
-	this.event_manager = event_manager;
+	this.item_manager = item_manager;
 
 	/* profile.host: The hostname of the IRC server to connect to */
 	this.host = profile.host || "localhost";
@@ -92,7 +92,7 @@ var IRCConnection = function (profile, event_manager) {
 		data = this.parse_message (message);
 		if (data) {
 			this.emit (data.command, data);
-			this.event_manager.send (new Event(this.get_item_name (data), data.command, data));
+			this.item_manager.send (new Event(this.get_item_name (data), data.command, data));
 		}
 	}).bind (this));
 

@@ -4,14 +4,13 @@ var net  = require ("net");
 var util = require ("util");
 
 var HubConfig  = require ("./HubConfig.js");
-var IRCManager = require ("./irc/Manager.js");
 var Server     = require ("./Server.js");
 
-var EventManager = require ("./EventManager.js");
+var ItemManager = require ("./ItemManager.js");
 
 var Hub = function () {
-	this.managers = [];
-	this.event_manager = new EventManager();
+	this.petals = [];
+	this.item_manager = new ItemManager();
 };
 
 /**
@@ -25,7 +24,6 @@ Hub.prototype.init = function () {
 	this.load_config (function (config) {
 		this.config = config;
 		this.start_server ();
-		this.start_chat ();
 	});
 
 };
@@ -50,7 +48,7 @@ Hub.prototype.load_config = function (callback) {
 Hub.prototype.start_server = function () {
 	console.log ("Starting up hub server");
 
-	this.server = new Server (this.config);
+	this.server = new Server (this);
 	this.server.listen ();
 };
 
@@ -61,9 +59,9 @@ Hub.prototype.shutdown = function () {
 	// Close petal connections
 	this.server.close ();
 
-	// Tell each manager to shut down
-	var num = this.managers.length;
-	this.managers.forEach (function (each) {
+	// Tell each petal to shut down
+	var num = this.petal.length;
+	this.petal.forEach (function (each) {
 		each.disconnect (function() {
 			num--;
 			if (!num) {
@@ -76,19 +74,6 @@ Hub.prototype.shutdown = function () {
 	function exit () {
 		process.exit ();
 	}
-};
-
-/**
- * Hub.start_chat():
- * This opens up the IRC connections from the config
- **/
-Hub.prototype.start_chat = function () {
-	var irc;
-	
-	irc = new IRCManager (this.config, this.event_manager);
-	irc.connect ();
-
-	this.managers.push (irc);
 };
 
 module.exports = Hub;

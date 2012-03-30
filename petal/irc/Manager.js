@@ -1,10 +1,16 @@
+var util = require ("util");
+
+var Petal = require ("../../hub/Petal.js");
 var Connection = require ("./Connection.js");
 
-var IRCManager = function (config, event_manager) {
-	this.config = config;
-	this.event_manager = event_manager;
+var IRCManager = function (item_manager) {
+	Petal.call (this, item_manager);
+
 	this.connections = [];
+	this.connect ();
 };
+
+util.inherits (IRCManager, Petal);
 
 /* This function takes the server profile from the config and extends
  * it with the defaults from the config so that when the defaults
@@ -24,7 +30,7 @@ IRCManager.prototype.connect = function () {
 	for (var i = 0, len = servers.length; i < len; i++) {
 
 		profile = this.create_profile (servers[i], defaults);
-		connection = new Connection (profile, this.event_manager);
+		connection = new Connection (profile, this.item_manager);
 
 		///* The following section is a massive hack, used temporarily as a testing interface.
 		connection.on("001", function (message) {
@@ -50,7 +56,7 @@ IRCManager.prototype.connect = function () {
 	}
 };
 
-IRCManager.prototype.disconnect = function(callback) {
+IRCManager.prototype.shutdown = function(callback) {
 	var connections, self = this;
 
 	// First we clone the connections array to use as a queue

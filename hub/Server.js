@@ -2,8 +2,8 @@
 
 var net = require ("net");
 
-var Server = function (config) {
-	this.config = config;
+var Server = function (hub) {
+	this.hub = hub;
 	this.connections = [];
 };
 
@@ -19,7 +19,7 @@ Server.prototype.listen = function () {
 	this.server.on ("connection", function(socket) { self.connection (socket); });
 	this.server.on ("listening", function() { self.listening (); });
 
-	this.server.listen (this.config.data.Core.socket);
+	//this.server.listen (this.config.data.Core.socket);
 };
 
 /**
