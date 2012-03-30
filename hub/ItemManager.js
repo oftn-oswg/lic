@@ -97,6 +97,8 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 
 ItemManager.prototype.command = function(item, command) {
 	var args, node, listeners = [];
+
+	console.log ("[%s] `%s` command: %s", item.map(encodeURIComponent).join("/"), command, JSON.stringify(Array.prototype.slice.call(arguments, 2)));
 	
 	node = this.command_tree;
 	args = Array.prototype.slice.call (arguments, 1);
