@@ -17,9 +17,9 @@ var ItemManager = function () {
 
 // EVENTS ---------------------------------------
 
-ItemManager.prototype.publish = function(event) {
+ItemManager.prototype.publish = function(item, type, data) {
 	// TODO: To be implemented.
-	console.log ("[%s] `%s` published.", event.item.map(encodeURIComponent).join("/"), event.type);
+	console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;34m%s\x1b[0m: %s", item.join("/"), type, JSON.stringify(data));
 	//util.puts (util.inspect (event, false, 2, true));
 };
 
@@ -98,7 +98,7 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 ItemManager.prototype.command = function(item, command) {
 	var args, node, listeners = [];
 
-	console.log ("[%s] `%s` command: %s", item.map(encodeURIComponent).join("/"), command, JSON.stringify(Array.prototype.slice.call(arguments, 2)));
+	console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;31m%s\x1b[0m %s", item.map(encodeURIComponent).join("/"), command, JSON.stringify(Array.prototype.slice.call(arguments, 2)).replace(/^\[(.*)\]$/, "($1)"));
 	
 	node = this.command_tree;
 	args = Array.prototype.slice.call (arguments, 1);

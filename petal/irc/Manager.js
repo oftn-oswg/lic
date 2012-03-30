@@ -1,6 +1,6 @@
 var util = require ("util");
 
-var Petal = require ("../../hub/Petal.js");
+var Petal = require ("../lib/Petal.js");
 var Connection = require ("./Connection.js");
 
 var IRCManager = function (item_manager) {
@@ -44,18 +44,13 @@ IRCManager.prototype.connect = function () {
 
 		///* The following section is a massive hack, used temporarily as a testing interface.
 		connection.on("001", function (message) {
-			this.raw ("JOIN #oftn");
-			var rl = require("readline");
-			var i = rl.createInterface(process.stdin, process.stdout, null);
-			i.on("line", function(line) {
-				connection.send ("PRIVMSG #oftn :" + line.trim());
-				doprmpt();
+			var channel = "#oftn";
+
+			this.raw ("JOIN " + channel);
+			process.stdin.resume();
+			process.stdin.on("data", function(data) {
+				connection.send ("PRIVMSG " + channel + " :" + String(data).trim());
 			});
-			doprmpt();
-			function doprmpt() {
-				i.setPrompt ("<"+connection.nickname+"> ", connection.nickname.length + 3);
-				i.prompt ();
-			}
 		});
 		//*/
 	
@@ -82,5 +77,9 @@ IRCManager.prototype.shutdown = function(callback) {
 		c.quit (next);
 	}) ();
 };
+
+if (require.main === module) {
+	Petal.register (IRCManager);
+}
 
 module.exports = IRCManager;

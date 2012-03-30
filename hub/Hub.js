@@ -25,6 +25,8 @@ var Hub = function () {
 Hub.prototype.init = function () {
 	var argv;
 
+	console.log ("licd, version 1a\nCopyright (c) The ΩF:∅ Foundation\n");
+
 	argv = optimist.usage ("Usage: $0 [options]")
 
 		.alias ("config", "c")
@@ -84,12 +86,12 @@ Hub.prototype.load_petals = function(petals) {
 
 	function load(petal) {
 		var Petal;
-	//	try {
+		try {
 			Petal = require (petal);
 			self.petals.push (new Petal(self.item_manager));
-	//	} catch (e) {
-	//		console.error (e);
-	//	}
+		} catch (e) {
+			console.error ("Could not load petal: %s", petal);
+		}
 	}
 };
 

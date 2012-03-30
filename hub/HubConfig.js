@@ -4,7 +4,7 @@ var fs        = require ("fs");
 var path      = require ("path");
 var util      = require ("util");
 
-var Petal     = require ("./Petal.js");
+var Petal     = require ("../petal/lib/Petal.js");
 var FileUtils = require ("./FileUtils.js");
 
 /**

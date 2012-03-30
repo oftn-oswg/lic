@@ -16,4 +16,10 @@ Petal.prototype.shutdown = function (callback) {
 	}
 };
 
+Petal.register = function (constructor) {
+	// TODO: Connect to hub over some protocol
+	// TODO: Construct petal with ItemManager
+	console.error ("Standalone petals are not implemented, yet.");
+};
+
 module.exports = Petal;

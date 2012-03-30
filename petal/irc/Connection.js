@@ -2,8 +2,6 @@ var util = require ("util");
 var net  = require ("net");
 var tls  = require ("tls");
 
-var Message = require ("../../hub/Message.js");
-
 /*
  * A special connection for handling the IRC protocol.
  * It is responsible for:
@@ -91,8 +89,10 @@ var IRCConnection = function (profile, item_manager) {
 
 		data = this.parse_message (message);
 		if (data) {
+			if (!/^\d{3}$/.test(data.command)) { // Hack
+				this.item_manager.publish (this.get_item_name (data), data.command.toLowerCase(), data);
+			}
 			this.emit (data.command, data);
-			this.item_manager.publish (new Message(this.get_item_name (data), data.command, data));
 		}
 	}).bind (this));
 
@@ -111,7 +111,13 @@ util.inherits (IRCConnection, process.EventEmitter);
 IRCConnection.prototype.get_item_name = function(data) {
 	// TODO: Make this specific to the items representing the channels.
 	// For now, we will just return irc/<name>
-	return ["irc", this.name];
+	var item = ["irc", this.name];
+	
+	if (data.params[0] && data.params[0] !== "*") {
+		item.push (data.params[0]);
+	}
+
+	return item;
 };
 
 IRCConnection.prototype.connect = function() {
