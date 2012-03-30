@@ -1,3 +1,4 @@
+var util = require ("util");
 
 /* ItemManager:
  * This object is the main router for all of lic's events.
@@ -9,5 +10,5 @@ var ItemManager = module.exports = function () {
 };
 
 ItemManager.prototype.send = function(event) {
-	console.log (event.stringify ());
+	util.puts (util.inspect (event, false, 2, true));
 };

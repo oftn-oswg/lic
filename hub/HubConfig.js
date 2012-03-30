@@ -4,6 +4,13 @@ var fs        = require ("fs");
 var path      = require ("path");
 var FileUtils = require ("./FileUtils.js");
 
+/**
+ * HubConfig:
+ * This is actually an internal petal which creates
+ * a special lic/config item. This item can be used by all
+ * petals to access, update, and modify global configuration.
+ **/
+
 var HubConfig = function (locations) {
 
 	this.path = null;

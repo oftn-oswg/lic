@@ -62,7 +62,7 @@ Hub.prototype.shutdown = function () {
 	// Tell each petal to shut down
 	var num = this.petal.length;
 	this.petal.forEach (function (each) {
-		each.disconnect (function() {
+		each.shutdown (function() {
 			num--;
 			if (!num) {
 				exit();
