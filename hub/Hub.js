@@ -12,6 +12,7 @@ var Hub = function () {
 	this.event_manager   = new EventManager (this);
 	this.command_manager = new CommandManager (this);
 	this.config          = new HubConfig (this.event_manager);
+	this.server          = new Server (this);
 };
 
 /**
@@ -68,12 +69,9 @@ Hub.prototype.init = function () {
  * This opens up a local socket and applies listeners.
  **/
 Hub.prototype.start_server = function () {
-	/*
-	console.log ("Starting up hub server");
+	console.log ("[INFO] Binding to network interfaces...");
 
-	this.server = new Server (this.config);
-	this.server.listen ();
-	*/
+	this.server.listen_all ();
 };
 
 Hub.prototype.register_petal = function (petal_name, connect, disconnect) {
