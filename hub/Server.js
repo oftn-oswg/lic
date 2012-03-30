@@ -2,9 +2,11 @@
 
 var net = require ("net");
 
-var Server = function (hub) {
-	this.hub = hub;
+var Server = function (item_manager) {
+	this.item_manager = item_manager;
 	this.connections = [];
+
+	this.config = {};
 };
 
 /**
@@ -19,7 +21,14 @@ Server.prototype.listen = function () {
 	this.server.on ("connection", function(socket) { self.connection (socket); });
 	this.server.on ("listening", function() { self.listening (); });
 
-	//this.server.listen (this.config.data.Core.socket);
+	this.item_manager.command (["lic", "config"], "get", ["Core.socket"], function(error, values) {
+		if (error) {
+			console.error ("Could not retrieve configuration");
+			return;
+		}
+		self.config.socket = values[0];
+		self.server.listen (self.config.socket);
+	});
 };
 
 /**
@@ -36,7 +45,7 @@ Server.prototype.close = function () {
 };
 
 Server.prototype.listening = function() {
-	console.log ("Now listening at %s", this.config.data.Core.socket);
+	console.log ("Now listening at %s", this.config.socket);
 };
 
 Server.prototype.connection = function(socket) {

@@ -84,12 +84,12 @@ Hub.prototype.load_petals = function(petals) {
 
 	function load(petal) {
 		var Petal;
-		try {
+	//	try {
 			Petal = require (petal);
 			self.petals.push (new Petal(self.item_manager));
-		} catch (e) {
-			console.error (e);
-		}
+	//	} catch (e) {
+	//		console.error (e);
+	//	}
 	}
 };
 
@@ -100,7 +100,7 @@ Hub.prototype.load_petals = function(petals) {
 Hub.prototype.start_server = function () {
 	console.log ("Starting up hub server");
 
-	this.server = new Server (this);
+	this.server = new Server (this.item_manager);
 	this.server.listen ();
 };
 
@@ -112,8 +112,8 @@ Hub.prototype.shutdown = function () {
 	this.server.close ();
 
 	// Tell each petal to shut down
-	var num = this.petal.length;
-	this.petal.forEach (function (each) {
+	var num = this.petals.length;
+	this.petals.forEach (function (each) {
 		each.shutdown (function() {
 			num--;
 			if (!num) {

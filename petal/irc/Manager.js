@@ -4,10 +4,20 @@ var Petal = require ("../../hub/Petal.js");
 var Connection = require ("./Connection.js");
 
 var IRCManager = function (item_manager) {
+	var self = this;
+
 	Petal.call (this, item_manager);
 
 	this.connections = [];
-	this.connect ();
+
+	item_manager.command (["lic", "config"], "get", ["IRC"], function(error, values) {
+		if (error) {
+			console.error ("Could not retrieve configuration");
+			return;
+		}
+		self.config = values[0];
+		self.connect ();
+	});
 };
 
 util.inherits (IRCManager, Petal);
@@ -24,8 +34,8 @@ IRCManager.prototype.create_profile = function (profile, defaults) {
 IRCManager.prototype.connect = function () {
 	var connection, profile, servers, defaults;
 
-	servers  = this.config.data.IRC.servers;
-	defaults = this.config.data.IRC.default;
+	servers  = this.config.servers;
+	defaults = this.config.default;
 
 	for (var i = 0, len = servers.length; i < len; i++) {
 

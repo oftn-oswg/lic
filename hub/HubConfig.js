@@ -15,24 +15,107 @@ var FileUtils = require ("./FileUtils.js");
  **/
 
 var HubConfig = function (item_manager, path) {
+	var self = this;
+
 	Petal.call (this);
+
+	item_manager.listen (["lic", "config"], this);
 
 	this.path = path;
 
 	// lic defaults
-	this.data = {};
-
-	// lic Core namespace
-	this.data.Core = {};
-	this.data.Core.socket = "/tmp/lic.sock";
-
-	this.data.IRC = {};
-	this.data.IRC.default = {};
-	this.data.IRC.servers = [];
+	this.data = {
+		"Core": {
+			"interfaces": ["/tmp/lic.sock"],
+		}
+	};
 };
 
 util.inherits (HubConfig, Petal);
 
+/**
+ * HubConfig#get(keys, callback):
+ * Accepts an array of keys relating to the config and
+ * calls back with a new array of corresponding values
+ **/
+HubConfig.prototype.get = function (keys, callback) {
+	var parts, node, response = [];
+
+	if (typeof keys === "string") keys = [keys];
+
+	for (var key_i = 0, key_len = keys.length; key_i < key_len; key_i++) {
+
+		node = this.data;
+		parts = keys[key_i].split (".");
+
+		for (var i = 0, len = parts.length; i < len; i++) {
+
+			if (typeof node !== "object") {
+				if (callback) {
+					callback.call (this, new Error("Cannot access property of non-object"));
+				}
+				return;
+			}
+
+			node = node[parts[i]];
+		}
+
+		response.push (node);
+	}
+
+	if (callback) {
+		callback.call (this, null, response);
+	}
+};
+
+
+/**
+ * HubConfig#set(obj, callback):
+ * Accepts an object of key/value pairs and attemps to
+ * set the configuration keys to the corresponding values
+ **/
+HubConfig.prototype.set = function (obj, callback) {
+	var parts, node, value;
+
+	for (var key in obj) {
+		if (!obj.hasOwnProperty(key)) break;
+
+		node = this.data;
+		parts = key.split (".");
+		value = obj[key];
+
+		for (var i = 0, len = parts.length; i < len; i++) {
+			
+			if (typeof node !== "object") {
+				if (callback) {
+					// TODO: Rollback other set properties?
+					callback.call (this, new Error("Cannot set property on non-object"));
+				}
+				return;
+			}
+
+			if (i >= (len-1)) {
+				node[parts[i]] = value;
+			} else {
+				node = node[parts[i]];
+			}
+		}
+
+	}
+
+	if (callback) {
+		callback.call (this, null);
+	}
+
+};
+
+/**
+ * HubConfig#clear(keys, callback):
+ * Removes keys from the configuration
+ **/
+HubConfig.prototype.clear = function (keys, callback) {
+	// TODO: Implement this.
+};
 
 HubConfig.prototype.load = function (callback) {
 	var location;

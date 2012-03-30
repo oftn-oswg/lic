@@ -8,7 +8,8 @@ var util = require ("util");
  * This is the main starting point for all of the events.
  **/
 var ItemManager = function () {
-	this.listener_tree = {};
+	this.event_tree = {};
+	this.command_tree = {};
 };
 
 
@@ -18,7 +19,8 @@ var ItemManager = function () {
 
 ItemManager.prototype.publish = function(event) {
 	// TODO: To be implemented.
-	util.puts (util.inspect (event, false, 2, true));
+	console.log ("[%s] `%s` published.", event.item.map(encodeURIComponent).join("/"), event.type);
+	//util.puts (util.inspect (event, false, 2, true));
 };
 
 ItemManager.prototype.subscribe = function(items) {
@@ -40,6 +42,19 @@ ItemManager.prototype.subscribe = function(items) {
  * should be taken.
  **/
 ItemManager.prototype.listen = function(items, listener, callback) {
+
+	// If `listener` is an object, create a function that calls the object's methods
+	if (typeof listener === "object") {
+		listener = (function(command) {
+			if (typeof this[command] === "function") {
+				this[command].apply(this, Array.prototype.slice.call (arguments, 1));
+				return true;
+			}
+			return false;
+		}).bind(listener);
+	}
+
+	// Create listeners on `items`
 	if (Array.isArray (items)) {
 		if (typeof items[0] === "string") {
 			add_listener.call (this, items, listener);
@@ -55,7 +70,7 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 	}
 
 	function add_listener(item, listener) {
-		var node = this.listener_tree;
+		var node = this.command_tree;
 		var item_length = item.length;
 		var part;
 
@@ -81,11 +96,29 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 };
 
 ItemManager.prototype.command = function(item, command) {
-	var args;
+	var args, node, listeners = [];
 	
+	node = this.command_tree;
 	args = Array.prototype.slice.call (arguments, 1);
 	
-	// TODO: Find listeners for item in listener_tree and call them with `args`
+	// Go through command_tree and add listeners to `listeners` array
+	for (var i = 0, len = item.length; i < len; i++) {
+		if (typeof node[item[i]] !== "object") break;
+
+		node = node[item[i]];
+
+		// Add wildcard item listeners
+		if (node["*"]) {
+			Array.prototype.push.apply (listeners, node["*"].listeners);
+		}
+	}
+
+	Array.prototype.push.apply (listeners, node.listeners);
+
+	// Call each listener
+	for (var i = 0, len = listeners.length; i < len; i++) {
+		listeners[i].apply (this, args);
+	}
 };
 
 module.exports = ItemManager;

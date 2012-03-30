@@ -92,7 +92,7 @@ var IRCConnection = function (profile, item_manager) {
 		data = this.parse_message (message);
 		if (data) {
 			this.emit (data.command, data);
-			this.item_manager.send (new Message(this.get_item_name (data), data.command, data));
+			this.item_manager.publish (new Message(this.get_item_name (data), data.command, data));
 		}
 	}).bind (this));
 
