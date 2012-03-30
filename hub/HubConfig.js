@@ -2,6 +2,9 @@
 
 var fs        = require ("fs");
 var path      = require ("path");
+var util      = require ("util");
+
+var Petal     = require ("./Petal.js");
 var FileUtils = require ("./FileUtils.js");
 
 /**
@@ -11,7 +14,8 @@ var FileUtils = require ("./FileUtils.js");
  * petals to access, update, and modify global configuration.
  **/
 
-var HubConfig = function (locations) {
+var HubConfig = function () {
+	Petal.call (this);
 
 	this.path = null;
 
@@ -26,6 +30,8 @@ var HubConfig = function (locations) {
 	this.data.IRC.default = {};
 	this.data.IRC.servers = [];
 };
+
+util.inherits (HubConfig, Petal);
 
 HubConfig.prototype.location = path.join (FileUtils.home (), ".lic", "config.json");
 
@@ -135,6 +141,8 @@ HubConfig.prototype.write_file = function(file, callback) {
 
 	data = JSON.stringify (this.data, null, 4);
 
+	console.log ("Saving configuration: %s", file);
+
 	fs.writeFile (file, data, 'utf8', function(error) {
 		callback.call (self, error);
 	});
@@ -159,6 +167,19 @@ HubConfig.prototype.load_config_data = function (data) {
 		});
 	}) (this.data, data);
 
+};
+
+/**
+ * HubConfig#shutdown:
+ * This command is called when the hub begins to shutdown.
+ * It writes changes in the configuration to disk and calls the callback.
+ **/
+HubConfig.prototype.shutdown = function(callback) {
+	this.write_file (this.location, function(error) {
+		if (callback) {
+			callback.call (this, error);
+		}
+	});
 };
 
 module.exports = HubConfig;
