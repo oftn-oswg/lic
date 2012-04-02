@@ -31,8 +31,6 @@ Server.prototype.listen = function () {
 			config.interfaces = values[0];
 		}
 
-		console.log(config.interfaces);
-
 		for (var i = 0, len = config.interfaces.length; i < len; i++) {
 			var connection = net.createServer ();
 			connection.on ("connection", self.handle);

@@ -249,14 +249,11 @@ HubConfig.prototype.load_config_data = function (data) {
 /**
  * HubConfig#shutdown:
  * This command is called when the hub begins to shutdown.
- * It writes changes in the configuration to disk and calls the callback.
+ * It it inherited from Petal#shutdown.
+ *
+ * It does not write changes in the configuration to disk
+ * because that should be done by the user. Some petals may change
+ * configuration that the user only wants set temporarily.
  **/
-HubConfig.prototype.shutdown = function(callback) {
-	this.write_file (this.path, function(error) {
-		if (callback) {
-			callback.call (this, error);
-		}
-	});
-};
 
 module.exports = HubConfig;

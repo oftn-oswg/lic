@@ -4,9 +4,3 @@ var Hub = require ("../hub/Hub.js");
 
 var hub_instance = new Hub();
 hub_instance.init ();
-
-if (process.platform != 'win32') {
-    process.on('SIGINT', function () {
-	    hub_instance.shutdown ();
-    });
-}

@@ -151,14 +151,17 @@ Hub.prototype.start_test_interface = function() {
 	var default_item = ["lic"];
 
 	var i = rl.createInterface (process.stdin, process.stdout, null);
-	prompt ();
+	i.setPrompt ("% ", 2);
+	i.prompt ();
 
-	function prompt() {
-		i.question ("# ", function(answer) {
-			handle (answer);
-			prompt ();
-		});
-	}
+	i.on ("line", function(line) {
+		handle (line.trim ());
+		i.prompt ();
+	});
+
+	i.on ("close", function() {
+		self.shutdown ();
+	});
 
 	function handle(input) {
 		var item, command, argument;
