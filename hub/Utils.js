@@ -2,7 +2,7 @@
 
 var path = require ("path");
 
-var FileUtils = {
+var Utils = {
 	home: function() {
 		var home = process.env.HOME;
 		
@@ -35,4 +35,4 @@ var FileUtils = {
 	}
 };
 
-module.exports = FileUtils;
+module.exports = Utils;

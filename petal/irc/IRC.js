@@ -66,7 +66,7 @@ IRCManager.prototype.shutdown = function(callback) {
 
 	// First we clone the connections array to use as a queue
 	connections = this.connections.slice ();
-	console.log ("Waiting for servers to close connections...");
+	console.log ("Waiting for IRC servers to close connections...");
 
 	(function next () {
 		var c = connections.shift ();

@@ -2,8 +2,9 @@
 
 var net = require ("net");
 
-var Server = function (item_manager) {
-	this.item_manager = item_manager;
+var Server = function (hub) {
+	this.hub = hub;
+	this.item_manager = hub.item_manager;
 	this.connections = [];
 
 	this.config = {};
@@ -14,41 +15,49 @@ var Server = function (item_manager) {
  * Opens the port and starts listening for connections.
  **/
 Server.prototype.listen = function () {
-	var self = this;
+	var self, config;
+	
+	self = this;
+	config = this.config;
 
-	this.server = net.createServer ();
-
-	this.server.on ("connection", function(socket) { self.connection (socket); });
-	this.server.on ("listening", function() { self.listening (); });
-
-	this.item_manager.command (["lic", "config"], "get", ["Core.socket"], function(error, values) {
-		if (error) {
-			console.error ("Could not retrieve configuration");
+	this.item_manager.command (["lic", "config"], "get", "Core.interfaces", function(error, values) {
+		if (error || values[0] == null) {
 			return;
 		}
-		self.config.socket = values[0];
-		self.server.listen (self.config.socket);
+
+		if (typeof values[0] === "string") {
+			config.interfaces = [values[0]];
+		} else {
+			config.interfaces = values[0];
+		}
+
+		console.log(config.interfaces);
+
+		for (var i = 0, len = config.interfaces.length; i < len; i++) {
+			var connection = net.createServer ();
+			connection.on ("connection", self.handle);
+			connection.listen (config.interfaces[i]);
+
+			self.connections.push (connection);
+		}
 	});
 };
 
 /**
- * Server.prototype.close():
+ * Server.prototype.shutdown():
  * Terminates all connections and closes the port, refusing further connections.
  **/
-Server.prototype.close = function () {
-	this.connections.forEach (function (socket) {
-		socket.end (); // TODO: Send proper notification of shutdown.
-	});
-	this.connections = [];
+Server.prototype.shutdown = function (callback) {
+	for (var i = 0, len = this.connections.length; i < len; i++) {
+		this.connections[i].close ();
+	}
 
-	this.server.close ();
+	if (callback) {
+		callback.call (this);
+	}
 };
 
-Server.prototype.listening = function() {
-	console.log ("Now listening at %s", this.config.socket);
-};
-
-Server.prototype.connection = function(socket) {
+Server.prototype.handle = function(socket) {
 	// TODO: Maintain a persistent connection.
 	console.log ("Petal connected");
 	socket.end  ("Hello.\nGoodbye.\n");

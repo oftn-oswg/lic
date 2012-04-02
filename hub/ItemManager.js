@@ -10,6 +10,12 @@ var util = require ("util");
 var ItemManager = function () {
 	this.event_tree = {};
 	this.command_tree = {};
+
+	this.frozen = false;
+};
+
+ItemManager.prototype.freeze = function() {
+	this.frozen = true;
 };
 
 
@@ -42,6 +48,7 @@ ItemManager.prototype.subscribe = function(items) {
  * should be taken.
  **/
 ItemManager.prototype.listen = function(items, listener, callback) {
+	if (this.frozen) return;
 
 	// If `listener` is an object, create a function that calls the object's methods
 	if (typeof listener === "object") {
@@ -96,6 +103,8 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 };
 
 ItemManager.prototype.command = function(item, command) {
+	if (this.frozen) return;
+
 	var args, node, listeners = [];
 
 	console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;31m%s\x1b[0m %s", item.map(encodeURIComponent).join("/"), command, JSON.stringify(Array.prototype.slice.call(arguments, 2)).replace(/^\[(.*)\]$/, "($1)"));

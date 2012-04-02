@@ -5,15 +5,15 @@ var util = require ("util");
 var path = require ("path");
 var optimist = require ("optimist");
 
-var FileUtils  = require ("./FileUtils.js");
-var HubConfig  = require ("./HubConfig.js");
-var Server     = require ("./Server.js");
+var Utils  = require ("./Utils.js");
+var Config = require ("./Config.js");
+var Server = require ("./Server.js");
 
 var ItemManager = require ("./ItemManager.js");
 
 var Hub = function () {
 	this.petals = [];
-	this.item_manager = new ItemManager();
+	this.item_manager = new ItemManager ();
 };
 
 /**
@@ -31,7 +31,7 @@ Hub.prototype.init = function () {
 
 		.alias ("config", "c")
 		.describe ("config", "Location of configuration file")
-		.default("config", path.join (FileUtils.home (), ".lic", "config.json"))
+		.default("config", path.join (Utils.home (), ".lic", "config.json"))
 
 		.alias ("petal", "p")
 		.describe ("petal", "Path of lic petal to load")
@@ -51,21 +51,26 @@ Hub.prototype.init = function () {
 		if (argv.petal) {
 			self.load_petals (argv.petal);
 		}
+
 		self.start_server ();
+
+		self.start_test_interface ();
 	});
 
 };
 
 
 /**
- * Hub.prototype.load_config():
- * This will scan directories for the config file and load it into memory.
- * The callback function will be called with the configuration data.
+ * Hub.prototype.load_config(path, callback):
+ * This loads the configuration petal with the given path to
+ * the configuration file.
  **/
 Hub.prototype.load_config = function (path, callback) {
 	var config;
 
-	config = new HubConfig (this.item_manager, path);
+	config = new Config (this.item_manager, path);
+
+	this.petals.push (config);
 	config.load (callback);
 };
 
@@ -87,7 +92,7 @@ Hub.prototype.load_petals = function(petals) {
 	function load(petal) {
 		var Petal;
 		try {
-			Petal = require (petal);
+			Petal = require (path.join (process.cwd(), petal));
 			self.petals.push (new Petal(self.item_manager));
 		} catch (e) {
 			console.error ("Could not load petal: %s", petal);
@@ -97,21 +102,25 @@ Hub.prototype.load_petals = function(petals) {
 
 /**
  * Hub.prototype.start_server():
- * This opens up a local socket and applies listeners.
+ * This opens up servers allowing petals to be run
+ * in a separate process.
  **/
 Hub.prototype.start_server = function () {
-	console.log ("Starting up hub server");
+	var server;
 
-	this.server = new Server (this.item_manager);
-	this.server.listen ();
+	server = new Server (this);
+	server.listen ();
+
+	this.server = server;
 };
 
 Hub.prototype.shutdown = function () {
+	var self = this;
 
 	console.log ("Shutting down");
 
-	// Close petal connections
-	this.server.close ();
+	// Freeze ItemManager from further communication
+	this.item_manager.freeze ();
 
 	// Tell each petal to shut down
 	var num = this.petals.length;
@@ -119,14 +128,66 @@ Hub.prototype.shutdown = function () {
 		each.shutdown (function() {
 			num--;
 			if (!num) {
-				exit();
+				exit.call (self);
 			}
 		});
 	});
 
-	// Final termination code
+	if (!num) {
+		exit.call (this);
+	}
+
+	// Final termination
 	function exit () {
-		process.exit ();
+		this.server.shutdown (function() {
+			process.exit ();
+		});
+	}
+};
+
+Hub.prototype.start_test_interface = function() {
+	var self = this;
+	var rl = require ("readline");
+	var default_item = ["lic"];
+
+	var i = rl.createInterface (process.stdin, process.stdout, null);
+	prompt ();
+
+	function prompt() {
+		i.question ("# ", function(answer) {
+			handle (answer);
+			prompt ();
+		});
+	}
+
+	function handle(input) {
+		var item, command, argument;
+		var match, regex = /^\s*(?:([^:]+):\s*)?([-a-z0-9]+)\s+(.*?)?\s*$/i;
+
+		if (match = input.match (regex)) {
+			command = match[2];
+
+			if (match[1]) {
+				item = match[1].split("/");
+			} else {
+				item = default_item;
+			}
+
+			if (match[3]) {
+				try {
+					argument = JSON.parse ("[" + match[3] + "]");
+				} catch (e) {
+					console.error ("Could not parse arguments.");
+					return;
+				}
+			} else {
+				argument = [];
+			}
+
+			ItemManager.prototype.command.apply (self.item_manager, [item, command].concat (argument));
+		} else {
+			console.error ("Syntax is: [item:]command [arguments, ...]");
+		}
 	}
 };
 

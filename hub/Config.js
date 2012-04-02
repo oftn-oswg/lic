@@ -5,7 +5,7 @@ var path      = require ("path");
 var util      = require ("util");
 
 var Petal     = require ("../petal/lib/Petal.js");
-var FileUtils = require ("./FileUtils.js");
+var Utils     = require ("./Utils.js");
 
 /**
  * HubConfig:
@@ -15,8 +15,6 @@ var FileUtils = require ("./FileUtils.js");
  **/
 
 var HubConfig = function (item_manager, path) {
-	var self = this;
-
 	Petal.call (this);
 
 	item_manager.listen (["lic", "config"], this);
@@ -24,11 +22,7 @@ var HubConfig = function (item_manager, path) {
 	this.path = path;
 
 	// lic defaults
-	this.data = {
-		"Core": {
-			"interfaces": ["/tmp/lic.sock"],
-		}
-	};
+	this.data = {};
 };
 
 util.inherits (HubConfig, Petal);
@@ -244,9 +238,9 @@ HubConfig.prototype.load_config_data = function (data) {
 													 ' exists where an object is expected.');
 				}
 				extend (base[prop], extension[prop]);
-	    } else {
+			} else {
 				base[prop] = extension[prop];
-	    }
+			}
 		});
 	}) (this.data, data);
 
