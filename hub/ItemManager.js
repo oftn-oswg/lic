@@ -52,9 +52,9 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 
 	// If `listener` is an object, create a function that calls the object's methods
 	if (typeof listener === "object") {
-		listener = (function(command) {
+		listener = (function(item, command) {
 			if (typeof this[command] === "function") {
-				this[command].apply(this, Array.prototype.slice.call (arguments, 1));
+				this[command].apply(this, Array.prototype.slice.call (arguments, 2));
 				return true;
 			}
 			return false;
@@ -107,10 +107,10 @@ ItemManager.prototype.command = function(item, command) {
 
 	var args, node, listeners = [];
 
-	console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;31m%s\x1b[0m %s", item.map(encodeURIComponent).join("/"), command, JSON.stringify(Array.prototype.slice.call(arguments, 2)).replace(/^\[(.*)\]$/, "($1)"));
+	console.log ("\x1b[0;35m%s\x1b[0m:\x1b[0;31m%s\x1b[0m %s", item.map(encodeURIComponent).join("/"), command, JSON.stringify(Array.prototype.slice.call(arguments, 2)).replace(/^\[(.*)\]$/, "($1)"));
 	
 	node = this.command_tree;
-	args = Array.prototype.slice.call (arguments, 1);
+	args = Array.prototype.slice.call (arguments);
 	
 	// Go through command_tree and add listeners to `listeners` array
 	for (var i = 0, len = item.length; i < len; i++) {
