@@ -96,6 +96,7 @@ Hub.prototype.load_petals = function(petals) {
 			self.petals.push (new Petal(self.item_manager));
 		} catch (e) {
 			console.error ("Could not load petal: %s", petal);
+			console.error (e.stack);
 		}
 	}
 };
@@ -165,7 +166,7 @@ Hub.prototype.start_test_interface = function() {
 
 	function handle(input) {
 		var item, command, argument;
-		var match, regex = /^\s*(?:([^:]+):\s*)?([-a-z0-9]+)\s+(.*?)?\s*$/i;
+		var match, regex = /^(\S+):(\S+)\s*(?:\((.*)\))?$/i;
 
 		if (match = input.match (regex)) {
 			command = match[2];
@@ -189,7 +190,7 @@ Hub.prototype.start_test_interface = function() {
 
 			ItemManager.prototype.command.apply (self.item_manager, [item, command].concat (argument));
 		} else {
-			console.error ("Syntax is: [item:]command [arguments, ...]");
+			console.error ("Syntax is: item:command [arguments, ...]");
 		}
 	}
 };
