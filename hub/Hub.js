@@ -166,13 +166,14 @@ Hub.prototype.start_test_interface = function() {
 
 	function handle(input) {
 		var item, command, argument;
-		var match, regex = /^(\S+):(\S+)\s*(?:\((.*)\))?$/i;
+		var match, regex = /^(?:(\S+):)?(\S+)\s*(?:\((.*)\))?$/i;
 
 		if (match = input.match (regex)) {
 			command = match[2];
 
 			if (match[1]) {
 				item = match[1].split("/");
+				default_item = item;
 			} else {
 				item = default_item;
 			}
@@ -190,7 +191,7 @@ Hub.prototype.start_test_interface = function() {
 
 			ItemManager.prototype.command.apply (self.item_manager, [item, command].concat (argument));
 		} else {
-			console.error ("Syntax is: item:command [arguments, ...]");
+			console.error ("Syntax is: [item:]command [(arguments, ...)]");
 		}
 	}
 };

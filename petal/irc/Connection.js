@@ -198,7 +198,7 @@ IRCConnection.prototype.quit = function (callback) {
 		return;
 	}
 
-	this.raw ("QUIT" + (quit_message ? " :" + quit_message : " :Client Quit"));
+	this.send ("QUIT" + (quit_message ? " :" + quit_message : " :Client Quit"));
 
 	this.connection.once ("end", function () {
 		if (callback) {
@@ -291,49 +291,51 @@ IRCConnection.prototype.raw = function (message) {
 };
 
 IRCConnection.prototype.identify = function () {
-	this.nick_try (this.nickname);
+
 	if (this.password) this.pass (this.password);
-
+	this.nick (this.nickname);
 	this.user (this.username, this.realname);
-};
 
-IRCConnection.prototype.nick_try = function (nick) {
-	this.nick (nick);
+	this.on ("432", nick_alt); // Erroneous nickname
+	this.on ("433", nick_alt); // Nickname in use
+	this.on ("436", nick_alt); // Nickname collision
 
-	this.once ("432", this.nick_alt); // Erroneous nickname
-	this.once ("433", this.nick_alt); // Nickname in use
-	this.once ("436", this.nick_alt); // Nickname collision
+	/**
+	 * Picks another nickname from the list of alternates
+	 * or generates a guest nick
+	 **/
+	function nick_alt (data) {
+		var alts = this.nickname_alts, nick;
+
+		if (this.welcomed) {
+			return;
+		}
+
+		// We have specified alternate nicknames
+		if (alts.length) {
+			nick = alts.shift();
+		} else {
+			// Generate guest nick randomly
+			nick = "Guest" + (Math.random() * 9999 | 0);
+		}
+
+		this.nick (nick);
+	}
 };
 
 IRCConnection.prototype.nick = function (nick) {
-	this.raw ("NICK " + nick);
+	this.send ("NICK " + nick);
+	this.nickname = nick;
 };
 
 IRCConnection.prototype.pass = function (pass) {
-	this.raw ("PASS " + pass);
+	this.send ("PASS " + pass);
 };
 
 IRCConnection.prototype.user = function (username, realname) {
-	this.raw ("USER " + username + " 0 * :" + realname);
+	this.send ("USER " + username + " 0 * :" + realname);
 };
 
-/* nick_alt:
- * Picks another nickname from the list of alternates
- * or generates a guest nick
- */
-IRCConnection.prototype.nick_alt = function () {
-	var alts;
-
-	alts = this.nickname_alts;
-
-	if (alts.length) {
-		this.nickname = alts.shift ();
-	} else {
-		// Generate guest nick
-		this.nickname = "Guest" + (Math.random() * 9999 | 0);
-	}
-	this.nick_try (this.nickname);
-};
 
 module.exports = IRCConnection;
 
