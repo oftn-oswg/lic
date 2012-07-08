@@ -48,33 +48,6 @@ ItemManager.prototype.subscribe = function(items) {
  * should be taken.
  **/
 ItemManager.prototype.listen = function(items, listener, callback) {
-	if (this.frozen) return;
-
-	// If `listener` is an object, create a function that calls the object's methods
-	if (typeof listener === "object") {
-		listener = (function(item, command) {
-			if (typeof this[command] === "function") {
-				this[command].apply(this, Array.prototype.slice.call (arguments, 2));
-				return true;
-			}
-			return false;
-		}).bind(listener);
-	}
-
-	// Create listeners on `items`
-	if (Array.isArray (items)) {
-		if (typeof items[0] === "string") {
-			add_listener.call (this, items, listener);
-		} else {
-			items.forEach (function(item) {
-				add_listener.call (this, item, listener);
-			});
-		}
-	} else {
-		if (callback) {
-			callback.call (this, new Error("Invalid argument for listen"));
-		}
-	}
 
 	function add_listener(item, listener) {
 		var node = this.command_tree;
@@ -100,12 +73,44 @@ ItemManager.prototype.listen = function(items, listener, callback) {
 			node = node[part];
 		}
 	}
+
+	if (this.frozen) {
+		return;
+	}
+
+	// If `listener` is an object, create a function that calls the object's methods
+	if (typeof listener === "object") {
+		listener = function(item, command) {
+			if (typeof this[command] === "function") {
+				this[command].apply(this, Array.prototype.slice.call (arguments, 2));
+				return true;
+			}
+			return false;
+		}.bind(listener);
+	}
+
+	// Create listeners on `items`
+	if (Array.isArray (items)) {
+		if (typeof items[0] === "string") {
+			add_listener.call (this, items, listener);
+		} else {
+			items.forEach (function(item) {
+				add_listener.call (this, item, listener);
+			});
+		}
+	} else {
+		if (callback) {
+			callback.call (this, new Error("Invalid argument for listen"));
+		}
+	}
 };
 
 ItemManager.prototype.command = function(item, command) {
-	if (this.frozen) return;
+	if (this.frozen) {
+		return;
+	}
 
-	var args, node, listeners = [];
+	var args, node, self = this, listeners = [];
 
 	console.log ("\x1b[0;35m%s\x1b[0m:\x1b[0;31m%s\x1b[0m %s", item.map(encodeURIComponent).join("/"), command, JSON.stringify(Array.prototype.slice.call(arguments, 2)).replace(/^\[(.*)\]$/, "($1)"));
 	
@@ -114,7 +119,9 @@ ItemManager.prototype.command = function(item, command) {
 	
 	// Go through command_tree and add listeners to `listeners` array
 	for (var i = 0, len = item.length; i < len; i++) {
-		if (typeof node[item[i]] !== "object") break;
+		if (typeof node[item[i]] !== "object") {
+			break;
+		}
 
 		node = node[item[i]];
 
@@ -126,10 +133,12 @@ ItemManager.prototype.command = function(item, command) {
 
 	Array.prototype.push.apply (listeners, node.listeners);
 
+	console.log (listeners.length + " listener" + (listeners.length === 1 ? "" : "s") + " for item " + item.join("/"));
+
 	// Call each listener
-	for (var i = 0, len = listeners.length; i < len; i++) {
-		listeners[i].apply (this, args);
-	}
+	listeners.forEach(function(listener) {
+		listener.apply(self, args);
+	});
 };
 
 module.exports = ItemManager;

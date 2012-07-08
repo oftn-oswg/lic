@@ -31,7 +31,7 @@ Hub.prototype.init = function () {
 
 		.alias ("config", "c")
 		.describe ("config", "Location of configuration file")
-		.default("config", path.join (Utils.home (), ".lic", "config.json"))
+		["default"]("config", path.join (Utils.home (), ".lic", "config.json"))
 
 		.alias ("petal", "p")
 		.describe ("petal", "Path of lic petal to load")
@@ -83,12 +83,6 @@ Hub.prototype.load_config = function (path, callback) {
 Hub.prototype.load_petals = function(petals) {
 	var self = this;
 
-	if (typeof petals === "string") {
-		load (petals);
-	} else {
-		petals.forEach (load);
-	}
-
 	function load(petal) {
 		var Petal;
 		try {
@@ -98,6 +92,12 @@ Hub.prototype.load_petals = function(petals) {
 			console.error ("Could not load petal: %s", petal);
 			console.error (e.stack);
 		}
+	}
+
+	if (typeof petals === "string") {
+		load (petals);
+	} else {
+		petals.forEach (load);
 	}
 };
 
@@ -118,6 +118,13 @@ Hub.prototype.start_server = function () {
 Hub.prototype.shutdown = function () {
 	var self = this;
 
+	// Final termination
+	function exit () {
+		self.server.shutdown (function() {
+			process.exit ();
+		});
+	}
+
 	console.log ("Shutting down");
 
 	// Freeze ItemManager from further communication
@@ -129,20 +136,13 @@ Hub.prototype.shutdown = function () {
 		each.shutdown (function() {
 			num--;
 			if (!num) {
-				exit.call (self);
+				exit();
 			}
 		});
 	});
 
 	if (!num) {
-		exit.call (this);
-	}
-
-	// Final termination
-	function exit () {
-		this.server.shutdown (function() {
-			process.exit ();
-		});
+		exit();
 	}
 };
 
@@ -166,9 +166,10 @@ Hub.prototype.start_test_interface = function() {
 
 	function handle(input) {
 		var item, command, argument;
-		var match, regex = /^(?:(\S+):)?(\S+)\s*(?:\((.*)\))?$/i;
+		var match, regex = /^(?:(\S+):)?([-a-z0-9]+)\s*(?:\((.*)\))?$/i;
 
-		if (match = input.match (regex)) {
+		match = input.match (regex);
+		if (match) {
 			command = match[2];
 
 			if (match[1]) {

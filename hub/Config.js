@@ -35,7 +35,9 @@ util.inherits (HubConfig, Petal);
 HubConfig.prototype.get = function (keys, callback) {
 	var parts, node, response = [];
 
-	if (typeof keys === "string") keys = [keys];
+	if (typeof keys === "string") {
+		keys = [keys];
+	}
 
 	for (var key_i = 0, key_len = keys.length; key_i < key_len; key_i++) {
 
@@ -71,9 +73,7 @@ HubConfig.prototype.get = function (keys, callback) {
 HubConfig.prototype.set = function (obj, callback) {
 	var parts, node, value;
 
-	for (var key in obj) {
-		if (!obj.hasOwnProperty(key)) break;
-
+	Object.keys(obj).forEach(function(key) {
 		node = this.data;
 		parts = key.split (".");
 		value = obj[key];
@@ -94,8 +94,7 @@ HubConfig.prototype.set = function (obj, callback) {
 				node = node[parts[i]];
 			}
 		}
-
-	}
+	});
 
 	if (callback) {
 		callback.call (this, null);
@@ -157,7 +156,7 @@ HubConfig.prototype.create_directory = function (dir, callback) {
 
 
 HubConfig.prototype.create_config = function (filename, callback) {
-	var dirs, path_current, self = this;
+	var self = this;
 
 	console.log ("Creating configuration file: %s", filename);
 
@@ -234,15 +233,14 @@ HubConfig.prototype.load_config_data = function (data) {
 		getOwn (extension).forEach(function (prop) {
 			if (typeof base[prop] === 'object') {
 				if (typeof extension[prop] !== 'object') {
-					throw new Error ('A ' + typeof extension[prop] + 
-													 ' exists where an object is expected.');
+					throw new Error ('A ' + typeof extension[prop] + ' exists where an object is expected.');
 				}
 				extend (base[prop], extension[prop]);
 			} else {
 				base[prop] = extension[prop];
 			}
 		});
-	}) (this.data, data);
+	}(this.data, data));
 
 };
 

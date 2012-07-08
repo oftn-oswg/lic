@@ -1,9 +1,11 @@
 var util = require ("util");
 
 var Petal = require ("../lib/Petal.js");
-var Connection = require ("./Connection.js");
 
-var IRCManager = function (item_manager) {
+var Connection = require ("./Connection.js");
+var ChannelList = require ("./ChannelList.js");
+
+var Manager = function (item_manager) {
 	var self = this;
 
 	Petal.call (this, item_manager);
@@ -17,10 +19,30 @@ var IRCManager = function (item_manager) {
 		args = Array.prototype.slice.call (arguments, 2);
 
 		if (server) {
+
+			if (command === "trace") {
+				try {
+					var channel = self.servers[server].channellist.channels[args[0]];
+					var list = channel.nicklist;
+					Object.keys(list.list).forEach(function (nick) {
+						var user = list.get(nick);
+						if (user) {
+							console.log("%s\top:%s\tho:%s\tvc:%s\t%s\t%s\t%s", nick, user.op, user.halfop, user.voice, user.host, user.user, user.real);
+						} else {
+							console.log(nick);
+						}
+					});
+					console.log ("Topic: %s\nTopic set by %s on %s", channel.topic, channel.topic_by ? channel.topic_by.nick : "NOBODY", String(new Date(channel.topic_time*1000)));
+					return;
+				} catch (e) {
+					console.error (e);
+				}
+			}
+
 			if (self.servers.hasOwnProperty (server)) {
 				method = Connection.prototype[command];
 				if (typeof method === "function") {
-					method.apply (self.servers[server], args);
+					method.apply (self.servers[server].connection, args);
 					return true;
 				}
 			}
@@ -40,25 +62,26 @@ var IRCManager = function (item_manager) {
 	});
 };
 
-util.inherits (IRCManager, Petal);
+util.inherits (Manager, Petal);
 
-IRCManager.prototype.name = "irc";
+Manager.prototype.name = "irc";
 
 /* This function takes the server profile from the config and extends
- * it with the defaults from the config so that when the defaults
- * change or the server profile changes, it will updated as such
+ * it with the defaults from the config.
  */
-IRCManager.prototype.create_profile = function (profile, defaults) {
-	profile.__proto__ = defaults;
-	return profile;
+Manager.prototype.create_profile = function (profile, defaults) {
+	return Object.create(defaults, Object.getOwnPropertyNames(profile).reduce(function(desc, prop) {
+		desc[prop] = Object.getOwnPropertyDescriptor(profile, prop);
+		return desc;
+	}, {}));
 };
 
-IRCManager.prototype.connect = function () {
-	var self, connection, profile, servers, defaults;
+Manager.prototype.connect = function () {
+	var self, connection, profile, servers, defaults, bundle;
 
 	self = this;
 	servers  = this.config.servers;
-	defaults = this.config.default;
+	defaults = this.config["default"];
 
 	for (var i = 0, len = servers.length; i < len; i++) {
 
@@ -74,12 +97,16 @@ IRCManager.prototype.connect = function () {
 					item.push (data.params[0]);
 				}
 
-				self.item_manager.command (item, data.command, data);
+				self.item_manager.publish (item, data.command, data);
 			});
 
 			connection.connect ();
 
-			this.servers[profile.name] = connection;
+			bundle = {};
+			bundle.connection = connection;
+			bundle.channellist = new ChannelList(bundle);
+
+			this.servers[profile.name] = bundle;
 
 		} else {
 			console.error ("IRC already has connection called `%s`. Skipping duplicate.", profile.name);
@@ -87,11 +114,11 @@ IRCManager.prototype.connect = function () {
 	}
 };
 
-IRCManager.prototype.shutdown = function(callback) {
+Manager.prototype.shutdown = function(callback) {
 	var connections, self = this;
 
 	// First we clone the connections array to use as a queue
-	connections = Object.getOwnPropertyNames (this.servers)
+	connections = Object.getOwnPropertyNames (this.servers);
 	console.log ("Waiting for IRC servers to close connections...");
 
 	(function next () {
@@ -100,12 +127,12 @@ IRCManager.prototype.shutdown = function(callback) {
 			callback.call (self);
 			return;
 		}
-		self.servers[c].quit (next);
-	}) ();
+		self.servers[c].connection.quit (next);
+	}());
 };
 
 if (require.main === module) {
-	Petal.register (IRCManager);
+	Petal.register (Manager);
 }
 
-module.exports = IRCManager;
+module.exports = Manager;

@@ -13,7 +13,7 @@ var tls  = require ("tls");
  * consult the README.
  */
 
-var IRCConnection = function (profile) {
+var Connection = function (profile) {
 
 	this.profile = profile;
 
@@ -57,33 +57,35 @@ var IRCConnection = function (profile) {
 	this.message_speed = profile.message_speed || 2200; // Time between messages in milliseconds
 	this.message_time  = 0; // Time the last message was sent
 
-	this.on ("connect", (function () { this.identify (); }).bind (this));
-	this.on ("secureConnect", (function () {
+	this.on ("connect", function () { this.identify (); });
+	this.on ("secureConnect", function () {
 		if (this.connection.authorized) {
 			this.emit ("connect");
 		} else {
 			console.log ("%s: Peer certificate was not signed by specified CA: %s", this.name, this.connection.authorizationError);
 			this.connection.end ();
 		}
-	}).bind (this));
+	});
 
 	var buffer = "";
-	this.on ("data", (function (chunk) {
+	this.on ("data", function (chunk) {
 		var offset, message;
 
 		buffer += chunk;
 		while (buffer) {
 			offset = buffer.indexOf ("\r\n");
-			if (offset < 0) return;
+			if (offset < 0) {
+				return;
+			}
 
 			message = buffer.substr (0, offset);
 			buffer  = buffer.substr (offset + 2);
 
 			this.emit ("raw", message);
 		}
-	}).bind (this));
+	});
 
-	this.on ("raw", (function (message) {
+	this.on ("raw", function (message) {
 		var data;
 
 		data = this.parse_message (message);
@@ -91,7 +93,7 @@ var IRCConnection = function (profile) {
 			this.emit ("message", data);
 			this.emit (data.command, data);
 		}
-	}).bind (this));
+	});
 
 	this.on ("PING", function (data) {
 		this.raw ("PONG :" + data.message);
@@ -100,9 +102,9 @@ var IRCConnection = function (profile) {
 	this.on ("001", function () { this.welcomed = true; }); // Welcome
 };
 
-util.inherits (IRCConnection, process.EventEmitter);
+util.inherits (Connection, process.EventEmitter);
 
-IRCConnection.prototype.get_item_name = function(data) {
+Connection.prototype.get_item_name = function(data) {
 	// TODO: Make this specific to the items representing the channels.
 	// For now, we will just return irc/<name>
 	var item = ["irc", this.name];
@@ -114,20 +116,8 @@ IRCConnection.prototype.get_item_name = function(data) {
 	return item;
 };
 
-IRCConnection.prototype.connect = function() {
-	var connection, options, self;
-
-	self = this;
-	
-	if (this.profile.ssl) {
-		this.ssl_load (function (options) {
-			connection = tls.connect (this.port, this.host, options);
-			setup (connection);
-		});
-	} else {
-		connection = net.createConnection (this.port, this.host);
-		setup (connection);
-	}
+Connection.prototype.connect = function() {
+	var connection, self = this;
 
 	function setup (connection) {
 		connection.setEncoding (this.encoding);
@@ -138,7 +128,7 @@ IRCConnection.prototype.connect = function() {
 			connection.setKeepAlive (true);
 		}
 
-		/* We need to tunnel the events to this IRCConnection object */
+		/* We need to tunnel the events to this Connection object */
 		connection.on ("secureConnect", function() { self.emit ("secureConnect"); });
 		connection.on ("connect",   function()     { self.emit ("connect"); });
 		connection.on ("data",      function(data) { self.emit ("data", data); });
@@ -148,9 +138,19 @@ IRCConnection.prototype.connect = function() {
 
 		self.connection = connection;
 	}
+
+	if (this.profile.ssl) {
+		this.ssl_load (function (options) {
+			connection = tls.connect (this.port, this.host, options);
+			setup (connection);
+		});
+	} else {
+		connection = net.createConnection (this.port, this.host);
+		setup (connection);
+	}
 };
 
-IRCConnection.prototype.ssl_load = function (callback) {
+Connection.prototype.ssl_load = function (callback) {
 	var options = {};
 
 	/* TODO: Use asyncronous calls, allow keys/certs
@@ -161,12 +161,12 @@ IRCConnection.prototype.ssl_load = function (callback) {
 	if (this.profile.ssl_cert) {
 		options.cert = fs.readFileSync (this.profile.ssl_cert);
 	}
-	//*/
+	*/
 	
 	callback.call (this, options);
 };
 
-/* IRCConnection#quit(message):
+/* Connection#quit(message):
  *
  * Ends the connection to the server after sending the quit command,
  * with the specified quit message from the config.
@@ -176,7 +176,7 @@ IRCConnection.prototype.ssl_load = function (callback) {
  * We will send the quit message and then set a timeout to end the
  * connection manually.
  */
-IRCConnection.prototype.quit = function (callback) {
+Connection.prototype.quit = function (callback) {
 	var quit_message, self = this;
 
 	quit_message = this.profile.quit_message;
@@ -214,7 +214,7 @@ IRCConnection.prototype.quit = function (callback) {
 	}, 10000);
 };
 
-IRCConnection.prototype.parse_message = function(incoming) {
+Connection.prototype.parse_message = function(incoming) {
 	var match = incoming.match (/^(?:(:[^\s]+) )?([^\s]+) (.+)$/);
 
 	var msg, params = match[3].match (/(.*?) ?:(.*)/);
@@ -241,8 +241,8 @@ IRCConnection.prototype.parse_message = function(incoming) {
 	return {prefix: prefix, command: command, params: params, message: msg};
 };
 
-/* IRCConnection#send: Sends a message with flood control */
-IRCConnection.prototype.send = function(message) {
+/* Connection#send: Sends a message with flood control */
+Connection.prototype.send = function(message) {
 	var queue, now;
 	
 	now = Date.now ();
@@ -256,13 +256,17 @@ IRCConnection.prototype.send = function(message) {
 	}
 
 	this.message_queue.push (message);
-	if (this.message_queue.length === 1) this.run_queue ();
+	if (this.message_queue.length === 1) {
+		this.run_queue ();
+	}
 };
 
-IRCConnection.prototype.run_queue = function () {
+Connection.prototype.run_queue = function () {
 	var now, last, delay, self = this;
 
-	if (!this.message_queue.length) return;
+	if (!this.message_queue.length) {
+		return;
+	}
 
 	now = Date.now ();
 	last = this.message_time;
@@ -277,8 +281,8 @@ IRCConnection.prototype.run_queue = function () {
 	}, delay - now + last);
 };
 
-/* IRCConnection#raw: Sends a message directly to the server */
-IRCConnection.prototype.raw = function (message) {
+/* Connection#raw: Sends a message directly to the server */
+Connection.prototype.raw = function (message) {
 	if (this.connection.readyState !== "open") {
 		return false;
 	}
@@ -290,23 +294,13 @@ IRCConnection.prototype.raw = function (message) {
 	return true;
 };
 
-IRCConnection.prototype.identify = function () {
-
-	if (this.password) this.pass (this.password);
-	this.nick (this.nickname);
-	this.user (this.username, this.realname);
-
-	this.on ("432", nick_alt); // Erroneous nickname
-	this.on ("433", nick_alt); // Nickname in use
-	this.on ("436", nick_alt); // Nickname collision
-
+Connection.prototype.identify = function () {
 	/**
 	 * Picks another nickname from the list of alternates
 	 * or generates a guest nick
 	 **/
 	function nick_alt (data) {
 		var alts = this.nickname_alts, nick;
-
 		if (this.welcomed) {
 			return;
 		}
@@ -316,30 +310,40 @@ IRCConnection.prototype.identify = function () {
 			nick = alts.shift();
 		} else {
 			// Generate guest nick randomly
-			nick = "Guest" + (Math.random() * 9999 | 0);
+			nick = "Guest" + Math.floor(Math.random() * 9999);
 		}
 
 		this.nick (nick);
 	}
+
+	if (this.password) {
+		this.pass (this.password);
+	}
+	this.nick (this.nickname);
+	this.user (this.username, this.realname);
+
+	this.on ("432", nick_alt); // Erroneous nickname
+	this.on ("433", nick_alt); // Nickname in use
+	this.on ("436", nick_alt); // Nickname collision
 };
 
-IRCConnection.prototype.nick = function (nick) {
+Connection.prototype.nick = function (nick) {
 	this.send ("NICK " + nick);
 	this.nickname = nick;
 };
 
-IRCConnection.prototype.pass = function (pass) {
+Connection.prototype.pass = function (pass) {
 	this.send ("PASS " + pass);
 };
 
-IRCConnection.prototype.user = function (username, realname) {
+Connection.prototype.user = function (username, realname) {
 	this.send ("USER " + username + " 0 * :" + realname);
 };
 
 
-module.exports = IRCConnection;
+module.exports = Connection;
 
-/*var c = new IRCConnection ({host: "irc.freenode.net", nick: "oftn-bot2"});
+/*var c = new Connection ({host: "irc.freenode.net", nick: "oftn-bot2"});
 c.on ("raw", function (m) { console.log (m); });
 
 require ('repl').start ().context.c = c;*/
