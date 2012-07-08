@@ -13,10 +13,9 @@ var tls  = require ("tls");
  * consult the README.
  */
 
-var IRCConnection = function (profile, item_manager) {
+var IRCConnection = function (profile) {
 
 	this.profile = profile;
-	this.item_manager = item_manager;
 
 	/* profile.host: The hostname of the IRC server to connect to */
 	this.host = profile.host || "localhost";
@@ -89,9 +88,7 @@ var IRCConnection = function (profile, item_manager) {
 
 		data = this.parse_message (message);
 		if (data) {
-			if (!/^\d{3}$/.test(data.command)) { // Hack
-				this.item_manager.publish (this.get_item_name (data), data.command.toLowerCase(), data);
-			}
+			this.emit ("message", data);
 			this.emit (data.command, data);
 		}
 	}).bind (this));
@@ -101,9 +98,6 @@ var IRCConnection = function (profile, item_manager) {
 	});
 
 	this.on ("001", function () { this.welcomed = true; }); // Welcome
-	this.on ("432", this.nick_alt); // Erroneous nickname
-	this.on ("433", this.nick_alt); // Nickname in use
-	this.on ("436", this.nick_alt); // Nickname collision
 };
 
 util.inherits (IRCConnection, process.EventEmitter);
@@ -188,7 +182,9 @@ IRCConnection.prototype.quit = function (callback) {
 	quit_message = this.profile.quit_message;
 
 	if (this.connection.readyState !== "open") {
-		callback.call (this);
+		if (callback) {
+			callback.call (this);
+		}
 		return;
 	}
 
@@ -196,19 +192,25 @@ IRCConnection.prototype.quit = function (callback) {
 	// then we should just end the connection
 	if (!this.welcomed) {
 		this.connection.end ();
-		callback.call (this);
+		if (callback) {
+			callback.call (this);
+		}
 		return;
 	}
 
-	this.raw ("QUIT" + (quit_message ? " :" + quit_message : ""));
+	this.raw ("QUIT" + (quit_message ? " :" + quit_message : " :Client Quit"));
 
 	this.connection.once ("end", function () {
-		callback.call (self);
+		if (callback) {
+			callback.call (self);
+		}
 	});
 
 	setTimeout (function () {
 		self.connection.end ();
-		callback.call (self);
+		if (callback) {
+			callback.call (self);
+		}
 	}, 10000);
 };
 
@@ -289,10 +291,18 @@ IRCConnection.prototype.raw = function (message) {
 };
 
 IRCConnection.prototype.identify = function () {
-	this.nick (this.nickname);
+	this.nick_try (this.nickname);
 	if (this.password) this.pass (this.password);
 
 	this.user (this.username, this.realname);
+};
+
+IRCConnection.prototype.nick_try = function (nick) {
+	this.nick (nick);
+
+	this.once ("432", this.nick_alt); // Erroneous nickname
+	this.once ("433", this.nick_alt); // Nickname in use
+	this.once ("436", this.nick_alt); // Nickname collision
 };
 
 IRCConnection.prototype.nick = function (nick) {
@@ -322,7 +332,7 @@ IRCConnection.prototype.nick_alt = function () {
 		// Generate guest nick
 		this.nickname = "Guest" + (Math.random() * 9999 | 0);
 	}
-	this.nick (this.nickname);
+	this.nick_try (this.nickname);
 };
 
 module.exports = IRCConnection;
