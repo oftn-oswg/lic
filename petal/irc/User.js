@@ -14,6 +14,10 @@ var User = function(nick, op, halfop, voice) {
 	this.voice = voice;
 };
 
+User.is_nick = function(nick) {
+	return /^[A-Z\[\\\]\^_`{|}][-0-9A-Z\[\\\]\^_`{|}]{,15}$/i.test(nick);
+};
+
 User.parse = function(prefix) {
 	var match = prefix.match(/^:?(.*)!(\S+)@(\S+)/);
 	if (match) {
