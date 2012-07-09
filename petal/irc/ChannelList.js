@@ -106,7 +106,9 @@ var ChannelList = function(bundle) {
 		names.forEach(function(name) {
 			var nick, op, halfop, voice;
 
-			nick = name.replace (/[^\-a-z0-9_\[\]{}|\\\^]+/gi, "");
+			// Remove non-nick chars as defined:
+			// https://git.freenode.net/redmine/projects/ircd-seven/repository/revisions/master/entry/src/match.c
+			nick = name.replace (/[^-0-9A-Z\[\\\]\^_`{|}]/gi, "");
 			op = name.indexOf ("@") >= 0;
 			halfop = name.indexOf ("%") >= 0;
 			voice = name.indexOf ("+") >= 0;
