@@ -2,6 +2,8 @@ var util = require ("util");
 var net  = require ("net");
 var tls  = require ("tls");
 
+var User = require ("./User.js");
+
 /*
  * A special connection for handling the IRC protocol.
  * It is responsible for:
@@ -100,6 +102,15 @@ var Connection = function (profile) {
 	});
 
 	this.on ("001", function () { this.welcomed = true; }); // Welcome
+
+	this.on ("NICK", function (data) {
+		var parse;
+
+		parse = User.parse (data.prefix);
+		if (parse.nick === this.nickname) {
+			this.nickname = data.message;
+		}
+	});
 };
 
 util.inherits (Connection, process.EventEmitter);
@@ -316,6 +327,7 @@ Connection.prototype.identify = function () {
 		}
 
 		this.nick (nick);
+		this.nickname = nick;
 	}
 
 	if (this.password) {
@@ -331,7 +343,6 @@ Connection.prototype.identify = function () {
 
 Connection.prototype.nick = function (nick) {
 	this.send ("NICK " + nick);
-	this.nickname = nick;
 };
 
 Connection.prototype.pass = function (pass) {
