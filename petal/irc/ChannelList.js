@@ -22,6 +22,7 @@ var ChannelList = function(bundle) {
 		if (parse.nick === this.nickname) {
 			channel.joined = false;
 			channel.parted = false;
+			channel.synced = false;
 			channel.nicklist.clear();
 		}
 
@@ -38,6 +39,7 @@ var ChannelList = function(bundle) {
 		if (parse.nick === this.nickname) {
 			channel.joined = false;
 			channel.parted = true;
+			channel.synced = false;
 			channel.nicklist.clear();
 		} else {
 			channel.nicklist.remove(parse.nick);
