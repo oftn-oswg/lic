@@ -29,10 +29,10 @@ var Connection = function (profile) {
 	/* profile.nick: The IRC nickname */
 	if (typeof profile.nick === "string") {
 		this.nickname      = profile.nick;
-		this.nickname_alts = [];
+		this.nickname_alts = [profile.nick];
 	} else {
 		this.nickname      = profile.nick[0];
-		this.nickname_alts = profile.nick.slice (1);
+		this.nickname_alts = profile.nick;
 	}
 
 	/* profile.user: The IRC username */
@@ -299,15 +299,17 @@ Connection.prototype.identify = function () {
 	 * Picks another nickname from the list of alternates
 	 * or generates a guest nick
 	 **/
+	var alts = this.nickname_alts, nickindex = 0;
 	function nick_alt (data) {
-		var alts = this.nickname_alts, nick;
+		var nick;
 		if (this.welcomed) {
 			return;
 		}
 
 		// We have specified alternate nicknames
-		if (alts.length) {
-			nick = alts.shift();
+		nickindex++;
+		if (alts[nickindex]) {
+			nick = alts[nickindex];
 		} else {
 			// Generate guest nick randomly
 			nick = "Guest" + Math.floor(Math.random() * 9999);
