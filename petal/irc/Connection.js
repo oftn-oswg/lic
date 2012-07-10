@@ -187,12 +187,14 @@ Connection.prototype.ssl_load = function (callback) {
  * We will send the quit message and then set a timeout to end the
  * connection manually.
  */
-Connection.prototype.quit = function (callback) {
+Connection.prototype.quit = function (quit_message, callback) {
 	var quit_message, self = this;
 
-	quit_message = this.profile.quit_message;
+	if (this.profile.quit_message) {
+		quit_message = this.profile.quit_message;
+	}
 
-	if (this.connection.readyState !== "open") {
+	if (!this.connection || this.connection.readyState !== "open") {
 		if (callback) {
 			callback.call (this);
 		}

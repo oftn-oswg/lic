@@ -9,7 +9,7 @@ var Channel = require ("./Channel.js");
  */
 
 var ChannelList = function(bundle) {
-	var server = bundle.connection, self = this;
+	var server = bundle.server.connection, self = this;
 
 	this.channels = {};
 

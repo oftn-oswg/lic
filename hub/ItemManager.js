@@ -133,7 +133,9 @@ ItemManager.prototype.command = function(item, command) {
 
 	Array.prototype.push.apply (listeners, node.listeners);
 
-	console.log (listeners.length + " listener" + (listeners.length === 1 ? "" : "s") + " for item " + item.join("/"));
+	if (listeners.length === 0) {
+		console.error("No listeners for item " + item.join("/"));
+	}
 
 	// Call each listener
 	listeners.forEach(function(listener) {

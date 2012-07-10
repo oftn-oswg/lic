@@ -1,0 +1,28 @@
+{
+    "IRC": {
+        "default": {
+            "nick": [
+                "person",
+                "person_alt",
+                "person_alt2",
+                "person_alt_etc"
+            ],
+            "quit_message": "Witty quit message here... http://github.com/oftn/lic/"
+        },
+        "servers": [
+            {
+                "name": "freenode",
+                "host": "chat.freenode.net",
+                "port": 6697,
+                "username": "username",
+                "password": "XXXXXXXXXXXXXXXX",
+                "ssl": true
+            }
+        ]
+    },
+    "Core": {
+        "interfaces": [
+            "/tmp/lic.sock"
+        ]
+    }
+}
