@@ -166,7 +166,7 @@ Hub.prototype.start_test_interface = function() {
 
 	function handle(input) {
 		var item, command, argument;
-		var match, regex = /^(?:(\S+):)?([-a-z0-9]+)\s*(?:\((.*)\))?$/i;
+		var match, regex = /^(?:(\S+):)?([-a-z0-9_]+)\s*(?:\((.*)\))?$/i;
 
 		match = input.match (regex);
 		if (match) {
