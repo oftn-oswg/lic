@@ -5,27 +5,24 @@ lic
 
 ![lic](https://github.com/oftn/lic/raw/master/img/logo.png)
 
-Multiple-client
----------------
-A single `lic` hub will remain connected to IRC for you at all times, and you can “attach” multiple
-clients to it--called petals--in separate terminals, viewing different channels, queries, or combinations of
-channels and queries. You can define ‘windows’ that will retain specific combinations of channels
-and queries, and retain scrollback from them for when you return at a later point.
 
-Unbelievably extensible
------------------------
-`lic` is extremly extensible through JavaScript, and provides full functionality to construct as
-complex/powerful an interface as you would like. The hub can run scripts that modify your
-overall IRC experience, while specific windows (as described above) can be scripted to customize the
-experience in ways unique to particular groups of channels and queries.
+Unique
+------
 
-Most crucially, the entire interface itself is built via the scripting API; and you have full access
-to ncurses-level interface-building functionality to implement everything from timestamps, to nickname
-hilights, to user lists, to statusbars. You can have an interface as simple as [ii][] or as complex
-as [irssi][], entirely through user-built scripts.
+What's unique about `lic` is that it acts as an IRC bouncer but with a special API that you can access from anywhere.
+It is accessible from multiple protocols and can be used to quickly make bots. It comes with an IRC client that's
+designed to be extremely extensible through JavaScript, and provides full functionality to construct as
+complex/powerful an interface as you would like. You can have an interface as simple as [ii][] or as complex as
+[irssi][], entirely through user-built scripts.
 
    [ii]: <http://tools.suckless.org/ii/> "a minimalist FIFO and filesystem-based IRC client"
    [irssi]: <http://irssi.org/> "themable ncurses IRC client"
+
+Architecture
+-----------
+
+The client is made up of a central hub, which will remain connected to IRC for you at all times, and petals which are attachable scripts which have the option of running out-of-process or even across a network. Petals can be anything from a client interface to a bot to a simple tweak.
+
 
 Current features
 ----------------
@@ -33,6 +30,7 @@ Current features
  * Alternate nick support
  * Message throttling
  * SSL support (10 Mar 2012)
+ * Nicklist management (8 Jul 2012)
 
 Test Interface
 --------------
