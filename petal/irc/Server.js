@@ -37,6 +37,7 @@ var Server = function(manager, profile) {
 		case "333":
 		case "352":
 		case "366":
+		case "404":
 			item.push(data.params[1]);
 			break;
 		case "353":
@@ -57,8 +58,8 @@ Server.prototype.join = function(channel) {
 	this.channellist.join(channel);
 };
 
-Server.prototype.part = function(channel) {
-	this.channellist.part(channel);
+Server.prototype.part = function(channel, message) {
+	this.channellist.part(channel, message);
 };
 
 Server.prototype.send = function(message) {

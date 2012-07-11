@@ -219,7 +219,7 @@ ChannelList.prototype.join = function(name) {
 	this.server.send ("JOIN " + name);
 };
 
-ChannelList.prototype.part = function(name) {
+ChannelList.prototype.part = function(name, message) {
 	var channel;
 
 	channel = this.get (name);
@@ -227,7 +227,7 @@ ChannelList.prototype.part = function(name) {
 		return;
 	}
 
-	this.server.send ("PART " + name);
+	this.server.send ("PART " + name + (message ? " :" + message : ""));
 };
 
 module.exports = ChannelList;

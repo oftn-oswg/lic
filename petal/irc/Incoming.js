@@ -35,7 +35,7 @@ var Incoming = function(manager) {
 			},
 			methods: {
 				"join": function() { this.server.join(this.channel); },
-				"part": function() { this.server.part(this.channel); },
+				"part": function(message) { this.server.part(this.channel, message); },
 				"say": function(message) { this.server.say(this.channel, message); }
 			}
 		},

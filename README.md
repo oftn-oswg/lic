@@ -71,7 +71,7 @@ Example item: `irc/freenode`
 - `:send("PING :foo")`: Sends raw IRC command to server
 - `:say("#oftn", "Greetings from lic!")`: Sends a message to a channel or user
 - `:join("#oftn")`: Joins the channel specified in the argument
-- `:part("#oftn")`: Parts the channel specified in the argument
+- `:part("#oftn")`: Parts the channel specified in the argument--part message argument is optional
 - `:quit`: Disconnects from the server--quit message argument is optional
 
 ### Channel
