@@ -1,6 +1,9 @@
 var User = require ("./User.js");
+var Channel = require ("./Channel.js");
 var Connection = require ("./Connection.js");
 var ChannelList = require ("./ChannelList.js");
+
+var Table = require ("./Table.js");
 
 var Server = function(manager, profile) {
 	this.connection = new Connection(profile);
@@ -75,6 +78,37 @@ Server.prototype.say = function(channel, message) {
 
 Server.prototype.quit = function(message, callback) {
 	this.connection.quit(message, callback);
+};
+
+Server.prototype.trace = function(channel) {
+	if (Channel.is_channel(channel)) {
+		channel = this.channellist.get(channel);
+		if (channel.joined) {
+			var list = channel.nicklist.list;
+			var data = [];
+			Object.getOwnPropertyNames(list).forEach(function(nick) {
+				var user = list[nick];
+				var mode = "";
+				if (user.op || user.voice) {
+					mode = "+" + (user.op ? "o" : "") + (user.voice ? "v" : "");
+				}
+				data.push([nick, user.user, user.host, mode, user.real]);
+			});
+			data.sort(function(a, b) {
+				a = a[0].toLowerCase();
+				b = b[0].toLowerCase();
+				return a < b ? -1 : (a > b ? 1 : 0);
+			});
+			data.unshift(["Nick", "User", "Host", "Mode", "Real name"]);
+			var table = new Table(data);
+			table.width = "auto";
+			console.log(table.render(150));
+		} else {
+			console.error("Not joined to channel");
+		}
+	} else {
+		console.error("Server trace expects channel argument");
+	}
 };
 
 module.exports = Server;

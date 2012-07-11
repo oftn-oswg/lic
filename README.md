@@ -73,6 +73,7 @@ Example item: `irc/freenode`
 - `:join("#oftn")`: Joins the channel specified in the argument
 - `:part("#oftn")`: Parts the channel specified in the argument--part message argument is optional
 - `:quit`: Disconnects from the server--quit message argument is optional
+- `:trace("#oftn")`: (Debugging) Prints nicklist of given channel
 
 ### Channel
 
@@ -81,6 +82,7 @@ Example item: `irc/freenode/#oftn`
 - `:join`: Another way of joining a channel
 - `:part`: Another way of parting a channel
 - `:say("Good news, everyone!")`: Another way of sending a message to the channel
+- `:trace`: (Debugging) Prints nicklist of channel
 
 ### User
 

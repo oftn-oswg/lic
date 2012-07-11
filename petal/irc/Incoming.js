@@ -21,7 +21,8 @@ var Incoming = function(manager) {
 				"say": Server.prototype.say,
 				"join": Server.prototype.join,
 				"part": Server.prototype.part,
-				"quit": Server.prototype.quit
+				"quit": Server.prototype.quit,
+				"trace": Server.prototype.trace
 			}
 		},
 		Channel: {
@@ -36,7 +37,8 @@ var Incoming = function(manager) {
 			methods: {
 				"join": function() { this.server.join(this.channel); },
 				"part": function(message) { this.server.part(this.channel, message); },
-				"say": function(message) { this.server.say(this.channel, message); }
+				"say": function(message) { this.server.say(this.channel, message); },
+				"trace": function(channel) { this.server.trace(this.channel); }
 			}
 		},
 		User: {
