@@ -15,7 +15,7 @@ var User = function(nick, op, halfop, voice) {
 };
 
 User.is_nick = function(nick) {
-	return /^[A-Z\[\\\]\^_`{|}][-0-9A-Z\[\\\]\^_`{|}]{,15}$/i.test(nick);
+	return (/^[A-Z\[\\\]\^_`{|}][\-0-9A-Z\[\\\]\^_`{|}]{0,15}$/i).test(nick);
 };
 
 User.parse = function(prefix) {

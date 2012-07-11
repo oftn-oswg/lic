@@ -8,8 +8,8 @@ var Channel = require ("./Channel.js");
  *  - Keeping track of channel properties
  */
 
-var ChannelList = function(bundle) {
-	var server = bundle.server.connection, self = this;
+var ChannelList = function(server) {
+	var self = this;
 
 	this.channels = {};
 
@@ -90,10 +90,7 @@ var ChannelList = function(bundle) {
 				}
 			});
 
-		} else {
-			// Parse user modes
 		}
-		
 	});
 	
 	// Names list
@@ -108,7 +105,7 @@ var ChannelList = function(bundle) {
 
 			// Remove non-nick chars as defined:
 			// https://git.freenode.net/redmine/projects/ircd-seven/repository/revisions/master/entry/src/match.c
-			nick = name.replace (/[^-0-9A-Z\[\\\]\^_`{|}]/gi, "");
+			nick = name.replace (/[^\-0-9A-Z\[\\\]\^_`{|}]/gi, "");
 			op = name.indexOf ("@") >= 0;
 			halfop = name.indexOf ("%") >= 0;
 			voice = name.indexOf ("+") >= 0;

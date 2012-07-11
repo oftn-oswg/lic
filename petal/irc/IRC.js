@@ -4,7 +4,6 @@ var Petal = require ("../lib/Petal.js");
 var Incoming = require ("./Incoming.js");
 
 var Server = require ("./Server.js");
-var ChannelList = require ("./ChannelList.js");
 
 var Manager = function (item_manager) {
 	Petal.call (this, item_manager);
@@ -23,7 +22,7 @@ var Manager = function (item_manager) {
 		self.config = values[0];
 		self.connect ();
 	});
-}
+};
 
 util.inherits (Manager, Petal);
 
@@ -40,7 +39,7 @@ Manager.prototype.create_profile = function (profile, defaults) {
 };
 
 Manager.prototype.connect = function () {
-	var self, server, profile, servers, defaults, bundle;
+	var self, servers, defaults;
 
 	self = this;
 	servers  = this.config.servers;
@@ -50,16 +49,9 @@ Manager.prototype.connect = function () {
 		profile = self.create_profile (profile, defaults);
 
 		if (!self.list.hasOwnProperty (profile.name)) {
-			bundle = {};
-
-			bundle.manager = self;
-			bundle.profile = profile;
-
-			bundle.server = new Server(bundle);
-			bundle.channellist = new ChannelList(bundle);
-
-			bundle.server.connect();
-			self.list[profile.name] = bundle;
+			var server = new Server(self, profile);
+			server.connect();
+			self.list[profile.name] = server;
 		} else {
 			console.error ("IRC already has connection called `%s`. Skipping duplicate.", profile.name);
 		}
@@ -81,7 +73,7 @@ Manager.prototype.shutdown = function(callback) {
 			}
 			return;
 		}
-		self.list[c].server.quit (null, next);
+		self.list[c].quit (null, next);
 	}());
 };
 

@@ -188,9 +188,9 @@ Connection.prototype.ssl_load = function (callback) {
  * connection manually.
  */
 Connection.prototype.quit = function (quit_message, callback) {
-	var quit_message, self = this;
+	var self = this;
 
-	if (this.profile.quit_message) {
+	if (!quit_message) {
 		quit_message = this.profile.quit_message;
 	}
 

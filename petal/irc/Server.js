@@ -1,13 +1,14 @@
 var User = require ("./User.js");
 var Connection = require ("./Connection.js");
+var ChannelList = require ("./ChannelList.js");
 
-var Server = function(bundle) {
-	this.bundle = bundle;
-	this.connection = new Connection(bundle.profile);
+var Server = function(manager, profile) {
+	this.connection = new Connection(profile);
+	this.channellist = new ChannelList(this.connection);
 	this.name = this.connection.name;
 
 	this.connection.on ("message", function(data) {
-		var item = [bundle.manager.name, this.name];
+		var item = [manager.name, this.name];
 
 		switch (data.command) {
 		case "NOTICE":
@@ -43,32 +44,32 @@ var Server = function(bundle) {
 			break;
 		}
 
-		bundle.manager.item_manager.publish (item, data.command, data.prefix + " " + data.params.join(" ") + " :" + (data.message || ""));
+		manager.item_manager.publish (item, data.command, data.prefix + " " + data.params.join(" ") + " :" + (data.message || ""));
 	});
 };
 
 Server.prototype.connect = function() {
 	console.log ("Connecting to IRC server `%s`", this.name);
 	this.connection.connect();
-}
+};
 
 Server.prototype.join = function(channel) {
-	this.bundle.channellist.join(channel);
+	this.channellist.join(channel);
 };
 
 Server.prototype.part = function(channel) {
-	this.bundle.channellist.part(channel);
+	this.channellist.part(channel);
 };
 
 Server.prototype.send = function(message) {
 	this.connection.send(message);
 };
 
-Server.prototype.send_to = function(to, message) {
-	to = String(to);
+Server.prototype.say = function(channel, message) {
+	channel = String(channel);
 	message = String(message);
 
-	this.connection.send("PRIVMSG " + to + " :" + message);
+	this.connection.send("PRIVMSG " + channel + " :" + message);
 };
 
 Server.prototype.quit = function(message, callback) {

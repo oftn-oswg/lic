@@ -15,10 +15,10 @@ var Incoming = function(manager) {
 			}
 		},
 		Server: {
-			self: function(item) { var bundle = manager.list[item[1]]; return bundle ? bundle.server : null; },
+			self: function(item) { return manager.list[item[1]]; },
 			methods: {
 				"send": Server.prototype.send,
-				"send_to": Server.prototype.send_to,
+				"say": Server.prototype.say,
 				"join": Server.prototype.join,
 				"part": Server.prototype.part,
 				"quit": Server.prototype.quit
@@ -27,23 +27,29 @@ var Incoming = function(manager) {
 		Channel: {
 			self: function(item) {
 				var server = this.Server.self(item);
-				if (!server) return null;
-				return { server: server, channel: item[2] }
+				if (!server) {
+					return null;
+				} else {
+					return { server: server, channel: item[2] };
+				}
 			},
 			methods: {
 				"join": function() { this.server.join(this.channel); },
 				"part": function() { this.server.part(this.channel); },
-				"send": function(message) { this.server.send_to(this.channel, message); }
+				"say": function(message) { this.server.say(this.channel, message); }
 			}
 		},
 		User: {
 			self: function(item) {
 				var server = this.Server.self(item);
-				if (!server) return null;
-				return { server: server, user: item[2] };
+				if (!server) {
+					return null;
+				} else {
+					return { server: server, user: item[2] };
+				}
 			},
 			methods: {
-				"send": function(message) { this.server.send_to(this.user, message); }
+				"say": function(message) { this.server.say(this.user, message); }
 			}
 		}
 	};
@@ -51,8 +57,6 @@ var Incoming = function(manager) {
 
 Incoming.prototype.listen = function() {
 	var self = this;
-	var manager = this.manager;
-
 	return function(item, command) {
 
 		var instance, method, object, args;
@@ -74,48 +78,6 @@ Incoming.prototype.listen = function() {
 			}
 		}
 	};
-
-	/*
-
-
-		var server, args, method;
-
-		server = item[1];
-		args = Array.prototype.slice.call (arguments, 2);
-
-		if (server) {
-
-			if (command === "trace") {
-				try {
-					var channel = self.servers[server].channellist.channels[args[0]];
-					var list = channel.nicklist;
-					Object.keys(list.list).forEach(function (nick) {
-						var user = list.get(nick);
-						if (user) {
-							console.log("%s\top:%s\tho:%s\tvc:%s\t%s\t%s\t%s", nick, user.op, user.halfop, user.voice, user.host, user.user, user.real);
-						} else {
-							console.log(nick);
-						}
-					});
-					console.log ("Topic: %s\nTopic set by %s on %s", channel.topic, channel.topic_by ? channel.topic_by.nick : "NOBODY", String(new Date(channel.topic_time*1000)));
-					return;
-				} catch (e) {
-					console.error (e);
-				}
-			}
-
-			if (self.servers.hasOwnProperty (server)) {
-				method = Connection.prototype[command];
-				if (typeof method === "function") {
-					method.apply (self.servers[server].connection, args);
-					return true;
-				}
-			}
-		}
-		return false;
-	});
-	*/
-
 };
 
 Incoming.prototype.get_object = function(item) {
@@ -134,7 +96,7 @@ Incoming.prototype.get_object = function(item) {
 		} else {
 			return this.map.User;
 		}
-	};
+	}
 };
 
 
