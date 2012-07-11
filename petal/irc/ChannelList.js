@@ -64,7 +64,7 @@ var ChannelList = function(server) {
 		parse = User.parse(data.prefix);
 		Object.keys(self.channels).forEach(function(channel) {
 			channel = self.channels[channel];
-			channel.nicklist.rename(parse.nick, data.message);
+			channel.nicklist.rename(parse.nick, data.params[0]);
 		});
 	});
 
@@ -98,7 +98,7 @@ var ChannelList = function(server) {
 		var names, channel;
 		
 		channel = self.get(data.params[2]);
-		names = data.message.split(/\s+/);
+		names = data.params[3].split(/\s+/);
 
 		names.forEach(function(name) {
 			var nick, op, halfop, voice;
@@ -139,7 +139,7 @@ var ChannelList = function(server) {
 		var channel;
 
 		channel = self.get(data.params[1]);
-		channel.topic = data.message;
+		channel.topic = data.params[2];
 	});
 
 	server.on ("333", function (data) {
@@ -154,15 +154,14 @@ var ChannelList = function(server) {
 		var channel;
 
 		channel = self.get(data.params[0]);
-		channel.topic = data.message;
+		channel.topic = data.params[1];
 		channel.topic_by = User.parse(data.prefix);
 		channel.topic_time = Math.floor(Date.now() / 1000);
 	});
 
 	// WHO reply
 	server.on ("352", function (data) {
-		// data.params = [me, channel, user, host, server, nick, <H|G>[*][@|+]]
-		// data.message = hopcount + " " + realname
+		// data.params = [me, channel, user, host, server, nick, <H|G>[*][@|+], hopcount + " " + realname]
 		var channel, user, extra_info;
 
 		if (!Channel.is_channel(data.params[1])) {
@@ -176,7 +175,7 @@ var ChannelList = function(server) {
 			extra_info = {
 				user: data.params[2],
 				host: data.params[3],
-				real: data.message.replace(/^\d+\s+/, "")
+				real: data.params[7].replace(/^\d+\s+/, "")
 			};
 			user.include(extra_info);
 		}

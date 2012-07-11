@@ -19,7 +19,7 @@ User.is_nick = function(nick) {
 };
 
 User.parse = function(prefix) {
-	var match = prefix.match(/^:?(.*)!(\S+)@(\S+)/);
+	var match = prefix.match(/^(.*)!(\S+)@(\S+)$/);
 	if (match) {
 		return {
 			nick: match[1],

@@ -45,7 +45,7 @@ var Server = function(manager, profile) {
 			break;
 		}
 
-		manager.item_manager.publish (item, data.command, data.prefix + " " + data.params.join(" ") + " :" + (data.message || ""));
+		manager.item_manager.publish (item, data.command, data);
 	});
 };
 

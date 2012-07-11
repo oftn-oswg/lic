@@ -98,7 +98,7 @@ var Connection = function (profile) {
 	});
 
 	this.on ("PING", function (data) {
-		this.raw ("PONG :" + data.message);
+		this.raw ("PONG :" + data.params[0]);
 	});
 
 	this.on ("001", function () { this.welcomed = true; }); // Welcome
@@ -108,7 +108,7 @@ var Connection = function (profile) {
 
 		parse = User.parse (data.prefix);
 		if (parse.nick === this.nickname) {
-			this.nickname = data.message;
+			this.nickname = data.params[0];
 		}
 	});
 };
@@ -228,30 +228,24 @@ Connection.prototype.quit = function (quit_message, callback) {
 };
 
 Connection.prototype.parse_message = function(incoming) {
-	var match = incoming.match (/^(?:(:[^\s]+) )?([^\s]+) (.+)$/);
+	var parse, match;
 
-	var msg, params = match[3].match (/(.*?) ?:(.*)/);
-	if (params) {
-		// Message segment
-		msg = params[2];
-		// Params before message
-		params = params[1].split (" ");
+	parse = {};
+	match = incoming.match(/^(?::(\S+)\s+)?(\S+)((?:\s+[^:]\S*)*)(?:\s+:(.*))?$/);
 
-	} else {
-		params = match[3].split  (" ");
+	if (match) {
+		parse.command = match[2];
+		parse.params = match[3].match(/\S+/g) || [];
+
+		if (match[1] != null) {
+			parse.prefix = match[1];
+		}
+		if (match[4] != null) {
+			parse.params.push(match[4]);
+		}
 	}
 
-	var prefix  = match[1];
-	var command = match[2];
-
-/*  // Convert the numeric commands to be actual number types
-	var charcode = command.charCodeAt(0);
-	if (charcode >= 48 && charcode <= 57 && command.length == 3) {
-		command = parseInt (command, 10);
-	}
-*/
-
-	return {prefix: prefix, command: command, params: params, message: msg};
+	return parse;
 };
 
 /* Connection#send: Sends a message with flood control */
