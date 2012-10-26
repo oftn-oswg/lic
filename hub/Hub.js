@@ -149,54 +149,8 @@ Hub.prototype.shutdown = function () {
 };
 
 Hub.prototype.start_test_interface = function() {
-	var self = this;
-	var rl = require ("readline");
-	var default_item = ["lic"];
-
-	var i = rl.createInterface (process.stdin, process.stdout, null);
-	i.setPrompt ("% ", 2);
-	i.prompt ();
-
-	i.on ("line", function(line) {
-		handle (line.trim ());
-		i.prompt ();
-	});
-
-	i.on ("close", function() {
-		self.shutdown ();
-	});
-
-	function handle(input) {
-		var item, command, argument;
-		var match, regex = /^(?:(\S+):)?([-a-z0-9_]+)\s*(?:\((.*)\))?$/i;
-
-		match = input.match (regex);
-		if (match) {
-			command = match[2];
-
-			if (match[1]) {
-				item = match[1].split("/");
-				default_item = item;
-			} else {
-				item = default_item;
-			}
-
-			if (match[3]) {
-				try {
-					argument = JSON.parse ("[" + match[3] + "]");
-				} catch (e) {
-					console.error ("Could not parse arguments.");
-					return;
-				}
-			} else {
-				argument = [];
-			}
-
-			ItemManager.prototype.command.apply (self.item_manager, [item, command].concat (argument));
-		} else {
-			console.error ("Syntax is: [item:]command [(arguments, ...)]");
-		}
-	}
+	var TestInterface = require('../petal/TestInterface');
+	this.petals.push(new TestInterface(this.item_manager));
 };
 
 module.exports = Hub;
