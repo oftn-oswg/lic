@@ -45,6 +45,8 @@ Hub.prototype.init = function () {
 		return;
 	}
 
+	this.item_manager.listen(["lic", "hub"], this);
+
 	var self = this;
 
 	this.load_config (argv.config, function() {
