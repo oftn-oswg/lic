@@ -15,7 +15,7 @@ var Utils     = require ("./Utils.js");
  **/
 
 var HubConfig = function (item_manager, path) {
-	Petal.call (this);
+	Petal.call (this, item_manager);
 
 	item_manager.listen (["lic", "config"], this);
 
