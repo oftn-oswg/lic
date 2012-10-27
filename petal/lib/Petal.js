@@ -1,5 +1,6 @@
-var Petal = function(item_manager) {
+var Petal = function(item_manager, connection) {
 	this.item_manager = item_manager;
+	this.hub_connection = connection;
 };
 
 Petal.prototype.id = "petal";
@@ -24,6 +25,23 @@ Petal.prototype.shutdown = function (callback) {
 	}
 };
 
+/**
+ * Petal#local_quit:
+ * This function can be called by the petal, to shut down cleanly, without killing the hub.
+ **/
+Petal.prototype.local_quit = function (callback) {
+	var self = this;
+	this.shutdown(function() {
+		if (self.hub_connection) {
+			self.hub_connection.end();
+			// unregister? code on the other side will also do that
+		}
+		if (callback) {
+			callback.apply(self, arguments);
+		}
+	})
+}
+
 Petal.register = function (constructor) {
 	// TODO: Connect to hub over some protocol
 	// TODO: Construct petal with ItemManager
@@ -32,7 +50,7 @@ Petal.register = function (constructor) {
 	var dnode = require("dnode");
 	var conn = dnode.connect("/tmp/lic.sock");
 	conn.on('remote', function(remote) {
-		var p = new constructor(remote.item_manager);
+		var p = new constructor(remote.item_manager, conn);
 		remote.register({shutdown: p.shutdown.bind(p)});
 	})
 };
