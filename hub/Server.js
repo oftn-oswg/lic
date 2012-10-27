@@ -2,13 +2,52 @@
 
 var net = require ("net");
 
+var dnode = require ("dnode");
+
 var Server = function (hub) {
 	this.hub = hub;
 	this.item_manager = hub.item_manager;
 	this.connections = [];
 
 	this.config = {};
+	this.registered_petals = {};
 };
+
+function make_itemmanager_interface(item_manager, client) {
+	var res = {};
+	client.unsubscriptions = [];
+	client.on('end', function() {
+		client.unsubscriptions.forEach(function(unsub) {
+			unsub();
+		})
+	})
+	res.subscribe = function(item, type, listener, callback) {
+		item_manager.subscribe(item, type, listener, function(err, unsub) {
+			if (err) {
+				if (callback) {
+					callback(err);
+				}
+			} else {
+				/* add to unsub list */
+				client.unsubscriptions.push(unsub);
+				var was_subbed = true;
+				if (callback) callback(null, function() {
+					/* remove from unsub list */
+					if (!was_subbed) return;
+					client.unsubscriptions.splice(client.unsubscriptions.indexOf(unsub), 1);
+					unsub();
+					was_subbed = false;
+				})
+			}
+		});
+	};
+	["publish", "listen", "command"].forEach(function (each) {
+		res[each] = function() {
+			item_manager[each].apply(item_manager, arguments);
+		};
+	})
+	return res;
+}
 
 /**
  * Server.prototype.listen():
@@ -32,11 +71,20 @@ Server.prototype.listen = function () {
 		}
 
 		for (var i = 0, len = config.interfaces.length; i < len; i++) {
-			var connection = net.createServer ();
-			connection.on ("connection", self.handle);
+			var connection = dnode(function(remote, socket) {
+				this.item_manager = make_itemmanager_interface(self.item_manager, socket);
+
+				this.register = function(petal) {
+					self.hub.register_petal(petal);
+					self.registered_petals[socket.id].push(petal);
+				}
+
+				self.registered_petals[socket.id] = [];
+				self.handle(socket);
+			});
 			connection.listen (config.interfaces[i]);
 
-			self.connections.push (connection);
+			self.connections.push(connection);
 		}
 	});
 };
@@ -47,7 +95,7 @@ Server.prototype.listen = function () {
  **/
 Server.prototype.shutdown = function (callback) {
 	for (var i = 0, len = this.connections.length; i < len; i++) {
-		this.connections[i].close ();
+		this.connections[i].end ();
 	}
 
 	if (callback) {
@@ -56,9 +104,16 @@ Server.prototype.shutdown = function (callback) {
 };
 
 Server.prototype.handle = function(socket) {
-	// TODO: Maintain a persistent connection.
 	console.log ("Petal connected");
-	socket.end  ("Hello.\nGoodbye.\n");
+	this.connections.push (socket);
+	var self = this;
+	socket.on('end', function() {
+		// that's ugly.
+		self.registered_petals[socket.id].forEach(function(petal) {
+			self.hub.unregister_petal(petal);
+		})
+		self.connections.splice(self.connections.indexOf(socket), 1);
+	});
 };
 
 module.exports = Server;

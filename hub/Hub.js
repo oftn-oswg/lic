@@ -134,6 +134,7 @@ Hub.prototype.shutdown = function () {
 
 	// Tell each petal to shut down
 	var num = this.petals.length;
+	// todo: make sure the petals are still connected
 	this.petals.forEach (function (each) {
 		each.shutdown (function() {
 			num--;
@@ -152,5 +153,16 @@ Hub.prototype.start_test_interface = function() {
 	var TestInterface = require('../petal/TestInterface');
 	this.petals.push(new TestInterface(this.item_manager));
 };
+
+Hub.prototype.register_petal = function(petal) {
+	this.petals.push(petal);
+	petal.registered = true;
+}
+
+Hub.prototype.unregister_petal = function(petal) {
+	var i = this.petals.indexOf(petal);
+	if (i != -1) this.petals.splice(i, 1);
+	petal.registered = false;
+}
 
 module.exports = Hub;

@@ -28,6 +28,13 @@ Petal.register = function (constructor) {
 	// TODO: Connect to hub over some protocol
 	// TODO: Construct petal with ItemManager
 	console.error ("Standalone petals are not implemented, yet.");
+
+	var dnode = require("dnode");
+	var conn = dnode.connect("/tmp/lic.sock");
+	conn.on('remote', function(remote) {
+		var p = new constructor(remote.item_manager);
+		remote.register({shutdown: p.shutdown.bind(p)});
+	})
 };
 
 module.exports = Petal;
