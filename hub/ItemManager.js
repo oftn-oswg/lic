@@ -63,6 +63,7 @@ ItemManager.prototype.publish = function(item, type, data) {
 	}
 
 	// Call each subscription
+	// TODO: some dependency management?
 	var i = 0;
 	function next(e) {
 		if (i < subscriptions.length){
@@ -143,8 +144,8 @@ ItemManager.prototype.unsubscribe = function(item, type, listener, callback) {
 				if (node.subscriptions.length == 0) {
 					delete node.subscriptions;
 					for (var i = item_length-1; i >= 0; i--) {
-						if (Object.keys(traversed_tree[item[i]]).length == 0) {
-							delete traversed_tree[item[i]];
+						if (Object.keys(traversed_tree[i][item[i]]).length == 0) {
+							delete traversed_tree[i][item[i]];
 						}
 					}
 				}
