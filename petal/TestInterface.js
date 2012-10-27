@@ -10,6 +10,7 @@ var TestInterface = function (item_manager) {
 	Petal.apply (this, arguments);
 
 	this.start_test_interface();
+	this.shutting_down = false;
 	// the hub can do this better, even after shutdown is called
 	// but we need to do this if we're a different process
 	if (require.main === module) {
@@ -29,6 +30,15 @@ TestInterface.prototype.verbose_event = function(e) {
 };
 
 TestInterface.prototype.shutdown = function(cb) {
+	// set this.shutting_down, this is checked in interface.on('close')
+	// because this indirectly triggers interface.on('close'), but we don't
+	// want to disconnect while we're shutting down, because the callback
+	// won't have time to reach the hub.
+	// because we're calling readline_interface *before* cb()
+	// the alternative would be calling cb() before readline_interface
+	// but I'm not really sure if that doesn't horribly violate the spirit
+	// of callbacks, in some way.
+	this.shutting_down = true;
 	if (this.readline_interface) {
 		this.readline_interface.close();
 	}
@@ -53,7 +63,7 @@ TestInterface.prototype.start_test_interface = function() {
 	i.on ("close", function() {
 		if (require.main !== module) {
 			self.item_manager.command (["lic", "hub"], "shutdown");
-		} else {
+		} else if (!self.shutting_down) {
 			self.local_quit();
 		}
 	});
