@@ -12,7 +12,10 @@ var TestInterface = function (item_manager) {
 	this.item_manager = item_manager;
 	this.start_test_interface();
 	// the hub can do this better, even after shutdown is called
-	//this.item_manager.subscribe(['*'], "*", this.verbose_event);
+	// but we need to do this if we're a different process
+	if (require.main == module) {
+		this.item_manager.subscribe(['*'], "*", this.verbose_event);
+	}
 };
 
 util.inherits (TestInterface, Petal);
@@ -75,3 +78,8 @@ TestInterface.prototype.start_test_interface = function() {
 		}
 	}
 };
+
+
+if (require.main === module) {
+	Petal.register (TestInterface);
+}
