@@ -6,8 +6,8 @@ var Incoming = require ("./Incoming.js");
 var Server = require ("./Server.js");
 
 var Manager = function (item_manager) {
-	Petal.call (this, item_manager);
-
+	Petal.apply (this, arguments);
+	
 	var self = this;
 	var incoming = new Incoming(this);
 
