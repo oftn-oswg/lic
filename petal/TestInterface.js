@@ -7,9 +7,8 @@ var Petal     = require ("./lib/Petal.js");
 
 
 var TestInterface = function (item_manager) {
-	Petal.call (this);
+	Petal.apply (this, arguments);
 
-	this.item_manager = item_manager;
 	this.start_test_interface();
 	// the hub can do this better, even after shutdown is called
 	// but we need to do this if we're a different process
@@ -29,6 +28,11 @@ TestInterface.prototype.verbose_event = function(e) {
 	e.next(e);
 }
 
+TestInterface.prototype.shutdown = function(cb) {
+	if (this.interface) this.interface.close();
+	cb();
+}
+
 TestInterface.prototype.start_test_interface = function() {
 	var self = this;
 	var default_item = ["lic"];
@@ -43,8 +47,14 @@ TestInterface.prototype.start_test_interface = function() {
 	});
 
 	i.on ("close", function() {
-		self.item_manager.command (["lic", "hub"], "shutdown");
+		if (require.main != module)
+			self.item_manager.command (["lic", "hub"], "shutdown");
+		else {
+			self.local_quit();
+		}
 	});
+
+	self.interface = i;
 
 	function handle(input) {
 		var item, command, argument;
