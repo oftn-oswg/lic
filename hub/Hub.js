@@ -134,6 +134,9 @@ Hub.prototype.shutdown = function () {
 
 	// Tell each petal to shut down
 	var num = this.petals.length;
+	if (!num) {
+		exit();
+	}
 	// todo: make sure the petals are still connected
 	this.petals.forEach (function (each) {
 		each.shutdown (function() {
@@ -144,9 +147,6 @@ Hub.prototype.shutdown = function () {
 		});
 	});
 
-	if (!num) {
-		exit();
-	}
 };
 
 Hub.prototype.start_test_interface = function() {
