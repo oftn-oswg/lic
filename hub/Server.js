@@ -70,19 +70,19 @@ Server.prototype.listen = function () {
 			config.interfaces = values[0];
 		}
 
+		var server_node = dnode(function(remote, socket) {
+			this.item_manager = make_itemmanager_interface(self.item_manager, socket);
+
+			this.register = function(petal) {
+				self.hub.register_petal(petal);
+				self.registered_petals[socket.id].push(petal);
+			}
+
+			self.registered_petals[socket.id] = [];
+			self.handle(socket);
+		});
 		for (var i = 0, len = config.interfaces.length; i < len; i++) {
-			var connection = dnode(function(remote, socket) {
-				this.item_manager = make_itemmanager_interface(self.item_manager, socket);
-
-				this.register = function(petal) {
-					self.hub.register_petal(petal);
-					self.registered_petals[socket.id].push(petal);
-				}
-
-				self.registered_petals[socket.id] = [];
-				self.handle(socket);
-			});
-			connection.listen (config.interfaces[i]);
+			var connection = server_node.listen (config.interfaces[i]);
 
 			self.connections.push(connection);
 		}
@@ -94,12 +94,35 @@ Server.prototype.listen = function () {
  * Terminates all connections and closes the port, refusing further connections.
  **/
 Server.prototype.shutdown = function (callback) {
-	for (var i = 0, len = this.connections.length; i < len; i++) {
-		this.connections[i].end ();
+	// we need to copy it, because .end() might fire up the .on('end') callback, removing it from the array
+	var connections_copy = this.connections.slice();
+	var num;
+
+	function on_stream_end() {
+		num--;
+		if (num == 0) {
+			exit();
+		}
 	}
 
-	if (callback) {
-		callback.call (this);
+	for (var i = 0, len = connections_copy.length; i < len; i++) {
+		var conn = connections_copy[i];
+		num++;
+		if (conn.close) {
+			conn.close(on_stream_end);
+		} else {
+			conn.once('end', on_stream_end);
+			conn.end ();
+		}
+	}
+	if (num == 0) {
+		exit();
+	}
+
+	function exit() {
+		if (callback) {
+			callback();
+		}
 	}
 };
 
@@ -108,6 +131,7 @@ Server.prototype.handle = function(socket) {
 	this.connections.push (socket);
 	var self = this;
 	socket.on('end', function() {
+		console.log ("Petal disconnected");
 		// that's ugly.
 		self.registered_petals[socket.id].forEach(function(petal) {
 			self.hub.unregister_petal(petal);
