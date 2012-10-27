@@ -28,9 +28,10 @@ ItemManager.prototype.publish = function(item, type, data) {
 	console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;34m%s\x1b[0m: %s", item.join("/"), type, JSON.stringify(data));
 	//util.puts (util.inspect (event, false, 2, true));
 	var event = {
-	    item: item
-	  ,	type: type
-	  , data: data }
+		item: item,
+		type: type,
+		data: data
+	};
 
 	if (this.frozen) {
 		return;
@@ -44,7 +45,7 @@ ItemManager.prototype.publish = function(item, type, data) {
 	for (var i = 0, len = item.length; i < len; i++) {
 		// Add wildcard item subscriptions
 		if (node["*"]) {
-			Array.prototype.push.apply (subscriptions, node["*"].subscriptions.filter(function(s) {return s.type == type || s.type=="*"}));
+			Array.prototype.push.apply (subscriptions, node["*"].subscriptions.filter(function(s) {return s.type === type || s.type === "*";}));
 		}
 
 		if (typeof node[item[i]] !== "object") {
@@ -54,7 +55,7 @@ ItemManager.prototype.publish = function(item, type, data) {
 		node = node[item[i]];
 	}
 	if (node.subscriptions) {
-		Array.prototype.push.apply (subscriptions, node.subscriptions.filter(function(s) {return s.type == type || s.type=="*"}));
+		Array.prototype.push.apply (subscriptions, node.subscriptions.filter(function(s) {return s.type === type || s.type === "*";}));
 	}
 
 	if (subscriptions.length === 0) {
@@ -64,7 +65,7 @@ ItemManager.prototype.publish = function(item, type, data) {
 
 	// Call each subscription
 	// TODO: some dependency management?
-	var i = 0;
+	i = 0;
 	function next(e) {
 		if (i < subscriptions.length){
 			subscriptions[i++].listener.call(self, event);
@@ -75,10 +76,10 @@ ItemManager.prototype.publish = function(item, type, data) {
 };
 
 ItemManager.prototype.subscribe = function(item, type, listener, callback) {
-	if (typeof item == "string") {
+	if (typeof item === "string") {
 		item = item.split("/");
 	}
-	if (!Array.isArray(item) || item.length == 0) {
+	if (!Array.isArray(item) || item.length === 0) {
 		if (callback) {
 			callback.call (this, new Error("Invalid argument for subscribe"));
 		}
@@ -95,7 +96,7 @@ ItemManager.prototype.subscribe = function(item, type, listener, callback) {
 			node = node[part];
 		}
 		if (node.subscriptions) {
-			node.subscriptions.push({listener: listener, type: type})
+			node.subscriptions.push({listener: listener, type: type});
 		} else {
 			node.subscriptions = [{listener: listener, type: type}];
 		}
@@ -109,10 +110,10 @@ ItemManager.prototype.subscribe = function(item, type, listener, callback) {
 };
 
 ItemManager.prototype.unsubscribe = function(item, type, listener, callback) {
-	if (typeof item == "string") {
+	if (typeof item === "string") {
 		item = item.split("/");
 	}
-	if (!Array.isArray(item) || item.length == 0) {
+	if (!Array.isArray(item) || item.length === 0) {
 		if (callback) {
 			callback.call (this, new Error("Invalid argument for subscribe"));
 		}
@@ -121,8 +122,9 @@ ItemManager.prototype.unsubscribe = function(item, type, listener, callback) {
 		var item_length = item.length;
 		var part;
 		var traversed_tree = new Array(item_length);
+		var i;
 
-		for (var i = 0; i < item_length; i++) {
+		for (i = 0; i < item_length; i++) {
 			part = item[i];
 			traversed_tree[i] = node;
 			if (typeof node[part] !== "object") {
@@ -131,20 +133,20 @@ ItemManager.prototype.unsubscribe = function(item, type, listener, callback) {
 			}
 			node = node[part];
 		}
-		if (typeof node == "object") {
+		if (typeof node === "object") {
 			if (node.subscriptions) {
 				var subscr_length = node.subscriptions.length;
-				for (var i = 0; i < subscr_length; i++) {
-					if (node.subscriptions[i].type == type && node.subscriptions[i].listener == listener) {
+				for (i = 0; i < subscr_length; i++) {
+					if (node.subscriptions[i].type === type && node.subscriptions[i].listener === listener) {
 						node.subscriptions.splice(i, 1);
 						break;
 					}
 				}
 				// clean up a branch that has no subscriptions
-				if (node.subscriptions.length == 0) {
+				if (node.subscriptions.length === 0) {
 					delete node.subscriptions;
-					for (var i = item_length-1; i >= 0; i--) {
-						if (Object.keys(traversed_tree[i][item[i]]).length == 0) {
+					for (i = item_length-1; i >= 0; i--) {
+						if (Object.keys(traversed_tree[i][item[i]]).length === 0) {
 							delete traversed_tree[i][item[i]];
 						}
 					}
@@ -155,7 +157,7 @@ ItemManager.prototype.unsubscribe = function(item, type, listener, callback) {
 			callback.call (this, null);
 		}
 	}
-}
+};
 
 
 

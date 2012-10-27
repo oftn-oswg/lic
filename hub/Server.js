@@ -19,8 +19,8 @@ function make_itemmanager_interface(item_manager, client) {
 	client.on('end', function() {
 		client.unsubscriptions.forEach(function(unsub) {
 			unsub();
-		})
-	})
+		});
+	});
 	res.subscribe = function(item, type, listener, callback) {
 		item_manager.subscribe(item, type, listener, function(err, unsub) {
 			if (err) {
@@ -31,13 +31,17 @@ function make_itemmanager_interface(item_manager, client) {
 				/* add to unsub list */
 				client.unsubscriptions.push(unsub);
 				var was_subbed = true;
-				if (callback) callback(null, function() {
-					/* remove from unsub list */
-					if (!was_subbed) return;
-					client.unsubscriptions.splice(client.unsubscriptions.indexOf(unsub), 1);
-					unsub();
-					was_subbed = false;
-				})
+				if (callback) {
+					callback(null, function() {
+						/* remove from unsub list */
+						if (!was_subbed) {
+							return;
+						}
+						client.unsubscriptions.splice(client.unsubscriptions.indexOf(unsub), 1);
+						unsub();
+						was_subbed = false;
+					});
+				}
 			}
 		});
 	};
@@ -45,7 +49,7 @@ function make_itemmanager_interface(item_manager, client) {
 		res[each] = function() {
 			item_manager[each].apply(item_manager, arguments);
 		};
-	})
+	});
 	return res;
 }
 
@@ -76,7 +80,7 @@ Server.prototype.listen = function () {
 			this.register = function(petal) {
 				self.hub.register_petal(petal);
 				self.registered_petals[socket.id].push(petal);
-			}
+			};
 
 			self.registered_petals[socket.id] = [];
 			self.handle(socket);
@@ -96,18 +100,28 @@ Server.prototype.listen = function () {
 Server.prototype.shutdown = function (callback) {
 	// we need to copy it, because .end() might fire up the .on('end') callback, removing it from the array
 	var connections_copy = this.connections.slice();
-	var num;
+
+	function exit() {
+		if (callback) {
+			callback();
+		}
+	}
 
 	function on_stream_end() {
 		num--;
-		if (num == 0) {
+		if (num === 0) {
 			exit();
 		}
 	}
 
+	var num = connections_copy.length;
+
+	if (num === 0) {
+		exit();
+	}
+
 	for (var i = 0, len = connections_copy.length; i < len; i++) {
 		var conn = connections_copy[i];
-		num++;
 		if (conn.close) {
 			conn.close(on_stream_end);
 		} else {
@@ -115,15 +129,7 @@ Server.prototype.shutdown = function (callback) {
 			conn.end ();
 		}
 	}
-	if (num == 0) {
-		exit();
-	}
 
-	function exit() {
-		if (callback) {
-			callback();
-		}
-	}
 };
 
 Server.prototype.handle = function(socket) {
@@ -135,7 +141,7 @@ Server.prototype.handle = function(socket) {
 		// that's ugly.
 		self.registered_petals[socket.id].forEach(function(petal) {
 			self.hub.unregister_petal(petal);
-		})
+		});
 		self.connections.splice(self.connections.indexOf(socket), 1);
 	});
 };

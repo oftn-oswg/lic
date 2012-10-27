@@ -39,10 +39,10 @@ Petal.prototype.local_quit = function (callback) {
 		if (callback) {
 			callback.apply(self, arguments);
 		}
-	})
-}
+	});
+};
 
-Petal.register = function (constructor) {
+Petal.register = function (Constructor) {
 	// TODO: Connect to hub over some protocol
 	// TODO: Construct petal with ItemManager
 	console.error ("Standalone petals are not implemented, yet.");
@@ -50,9 +50,9 @@ Petal.register = function (constructor) {
 	var dnode = require("dnode");
 	var conn = dnode.connect("/tmp/lic.sock");
 	conn.on('remote', function(remote) {
-		var p = new constructor(remote.item_manager, conn);
+		var p = new Constructor(remote.item_manager, conn);
 		remote.register({shutdown: p.shutdown.bind(p)});
-	})
+	});
 };
 
 module.exports = Petal;

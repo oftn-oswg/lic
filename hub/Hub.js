@@ -157,12 +157,14 @@ Hub.prototype.start_test_interface = function() {
 Hub.prototype.register_petal = function(petal) {
 	this.petals.push(petal);
 	petal.registered = true;
-}
+};
 
 Hub.prototype.unregister_petal = function(petal) {
 	var i = this.petals.indexOf(petal);
-	if (i != -1) this.petals.splice(i, 1);
+	if (i !== -1) {
+		this.petals.splice(i, 1);
+	}
 	petal.registered = false;
-}
+};
 
 module.exports = Hub;

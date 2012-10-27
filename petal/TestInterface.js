@@ -12,7 +12,7 @@ var TestInterface = function (item_manager) {
 	this.start_test_interface();
 	// the hub can do this better, even after shutdown is called
 	// but we need to do this if we're a different process
-	if (require.main == module) {
+	if (require.main === module) {
 		this.item_manager.subscribe(['*'], "*", this.verbose_event);
 	}
 };
@@ -26,12 +26,16 @@ module.exports = TestInterface;
 TestInterface.prototype.verbose_event = function(e) {
 	console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;34m%s\x1b[0m: %s", e.item.join("/"), e.type, JSON.stringify(e.data));
 	e.next(e);
-}
+};
 
 TestInterface.prototype.shutdown = function(cb) {
-	if (this.interface) this.interface.close();
-	cb();
-}
+	if (this.readline_interface) {
+		this.readline_interface.close();
+	}
+	if (cb) {
+		cb();
+	}
+};
 
 TestInterface.prototype.start_test_interface = function() {
 	var self = this;
@@ -47,18 +51,18 @@ TestInterface.prototype.start_test_interface = function() {
 	});
 
 	i.on ("close", function() {
-		if (require.main != module)
+		if (require.main !== module) {
 			self.item_manager.command (["lic", "hub"], "shutdown");
-		else {
+		} else {
 			self.local_quit();
 		}
 	});
 
-	self.interface = i;
+	self.readline_interface = i;
 
 	function handle(input) {
 		var item, command, argument;
-		var match, regex = /^(?:(\S+):)?([-a-z0-9_]+)\s*(?:\((.*)\))?$/i;
+		var match, regex = /^(?:(\S+):)?([\-a-z0-9_]+)\s*(?:\((.*)\))?$/i;
 
 		match = input.match (regex);
 		if (match) {
