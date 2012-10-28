@@ -11,11 +11,8 @@ var TestInterface = function (item_manager) {
 
 	this.start_test_interface();
 	this.shutting_down = false;
-	// the hub can do this better, even after shutdown is called
-	// but we need to do this if we're a different process
-	if (require.main === module) {
-		this.item_manager.subscribe(['*'], "*", this.verbose_event);
-	}
+	// the hub can do this better, also after shutdown is called
+	this.item_manager.subscribe(['*'], "*", this.verbose_event);
 };
 
 util.inherits (TestInterface, Petal);
@@ -61,7 +58,7 @@ TestInterface.prototype.start_test_interface = function() {
 	});
 
 	i.on ("close", function() {
-		if (require.main !== module) {
+		if (!self.is_separate()) {
 			self.item_manager.command (["lic", "hub"], "shutdown");
 		} else if (!self.shutting_down) {
 			self.local_quit();

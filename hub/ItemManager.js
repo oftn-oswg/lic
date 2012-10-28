@@ -1,5 +1,3 @@
-var util = require ("util");
-
 /**
  * ItemManager:
  * This object is the main router for all of lic's events.
@@ -24,9 +22,7 @@ ItemManager.prototype.freeze = function() {
 // EVENTS ---------------------------------------
 
 ItemManager.prototype.publish = function(item, type, data) {
-	// TODO: To be implemented.
-	console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;34m%s\x1b[0m: %s", item.join("/"), type, JSON.stringify(data));
-	//util.puts (util.inspect (event, false, 2, true));
+	//console.log ("\x1b[0;35m%s\x1b[0m \x1b[0;34m%s\x1b[0m: %s", item.join("/"), type, JSON.stringify(data));
 	var event = {
 		item: item,
 		type: type,

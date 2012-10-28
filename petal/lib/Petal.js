@@ -42,11 +42,20 @@ Petal.prototype.local_quit = function (callback) {
 	});
 };
 
-Petal.register = function (Constructor) {
-	// TODO: Connect to hub over some protocol
-	// TODO: Construct petal with ItemManager
-	console.error ("Standalone petals are not implemented, yet.");
+/**
+  * Petal#is_separate:
+  * This function returns true when the petal is not running inside the hub.
+  **/
+Petal.prototype.is_separate = function () {
+	return !!this.hub_connection;
+};
 
+/**
+  * Petal.register:
+  * for now, this function connects to the hub over the default interface, and registers with it.
+  **/
+
+Petal.register = function (Constructor) {
 	var dnode = require("dnode");
 	var conn = dnode.connect("/tmp/lic.sock");
 	conn.on('remote', function(remote) {
