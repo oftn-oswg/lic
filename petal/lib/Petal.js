@@ -1,3 +1,5 @@
+var ItemManager_Bridge = require('../../hub/ItemManager_Bridge');
+
 var Petal = function(item_manager, connection) {
 	this.item_manager = item_manager;
 	this.hub_connection = connection;
@@ -28,16 +30,35 @@ Petal.prototype.shutdown = function (callback) {
 /**
  * Petal#local_quit:
  * This function can be called by the petal, to shut down cleanly, without killing the hub.
+ * Currently only when Petal#is_separate.
+ * Calling local_quit on petals running inside the hub will not remove any subscription,
+ * or unregister the petal.
  **/
 Petal.prototype.local_quit = function (callback) {
 	var self = this;
+	if (!self.is_separate) {
+		console.error("local_quit is not supported on petals running inside the hub.");
+	}
 	this.shutdown(function() {
-		if (self.hub_connection) {
-			self.hub_connection.end();
-			// unregister? code on the other side will also do that
+		function after_cleanup() {
+			function after_after_cleanup() {
+				if (self.hub_connection) {
+					self.hub_connection.end();
+				}
+				if (callback) {
+					callback.apply(self, arguments);
+				}
+			}
+			if (self.unregister) {
+				self.unregister(after_after_cleanup);
+			} else {
+				after_after_cleanup();
+			}
 		}
-		if (callback) {
-			callback.apply(self, arguments);
+		if (self.item_manager.cleanup) {
+			self.item_manager.cleanup(after_cleanup);
+		} else {
+			after_cleanup();
 		}
 	});
 };
@@ -59,8 +80,10 @@ Petal.register = function (Constructor) {
 	var dnode = require("dnode");
 	var conn = dnode.connect("/tmp/lic.sock");
 	conn.on('remote', function(remote) {
-		var p = new Constructor(remote.item_manager, conn);
-		remote.register({shutdown: p.shutdown.bind(p)});
+		var p = new Constructor(new ItemManager_Bridge(remote.item_manager), conn);
+		remote.register({shutdown: p.shutdown.bind(p)}, function(unregister) {
+			p.unregister = unregister;
+		});
 	});
 };
 
