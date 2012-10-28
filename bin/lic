@@ -1,3 +1,6 @@
 #!/usr/bin/env node
 
-require ("../petal/Petal.js");
+var Petal_Client = require ("../petal/Petal.js");
+
+var petal_instance = new Petal_Client();
+petal_instance.init();

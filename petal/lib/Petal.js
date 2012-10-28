@@ -33,6 +33,7 @@ Petal.prototype.shutdown = function (callback) {
  * Currently only when Petal#is_separate.
  * Calling local_quit on petals running inside the hub will not remove any subscription,
  * or unregister the petal.
+ * TODO: this fails HORRIBLY when there are multiple petals running in a single lic instance.
  **/
 Petal.prototype.local_quit = function (callback) {
 	var self = this;
