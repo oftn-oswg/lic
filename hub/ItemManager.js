@@ -72,6 +72,7 @@ ItemManager.prototype.publish = function(item, type, data) {
 };
 
 ItemManager.prototype.subscribe = function(item, type, listener, callback) {
+	var self = this;
 	if (typeof item === "string") {
 		item = item.split("/");
 	}
@@ -98,8 +99,10 @@ ItemManager.prototype.subscribe = function(item, type, listener, callback) {
 		}
 
 		if (callback) {
-			// give unsubscribe function back, we needs this because we might be running over dnode.
-			callback.call (this, null, this.unsubscribe.bind(this, item, type, listener));
+			// give unsubscribe function back, we need this because we might be running over dnode.
+			callback(null, function(callback) {
+				self.unsubscribe(item, type, listener, callback);
+			});
 		}
 	}
 
