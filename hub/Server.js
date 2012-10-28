@@ -4,6 +4,8 @@ var net = require ("net");
 
 var dnode = require ("dnode");
 
+var ItemManager_Bridge = require("./ItemManager_Bridge.js");
+
 var Server = function (hub) {
 	this.hub = hub;
 	this.item_manager = hub.item_manager;
@@ -14,43 +16,11 @@ var Server = function (hub) {
 };
 
 function make_itemmanager_interface(item_manager, client) {
-	var res = {};
-	client.unsubscriptions = [];
+	var bridge = new ItemManager_Bridge(item_manager);
 	client.on('end', function() {
-		client.unsubscriptions.forEach(function(unsub) {
-			unsub();
-		});
+		bridge.cleanup();
 	});
-	res.subscribe = function(item, type, listener, callback) {
-		item_manager.subscribe(item, type, listener, function(err, unsub) {
-			if (err) {
-				if (callback) {
-					callback(err);
-				}
-			} else {
-				/* add to unsub list */
-				client.unsubscriptions.push(unsub);
-				var was_subbed = true;
-				if (callback) {
-					callback(null, function() {
-						/* remove from unsub list */
-						if (!was_subbed) {
-							return;
-						}
-						client.unsubscriptions.splice(client.unsubscriptions.indexOf(unsub), 1);
-						unsub();
-						was_subbed = false;
-					});
-				}
-			}
-		});
-	};
-	["publish", "listen", "command"].forEach(function (each) {
-		res[each] = function() {
-			item_manager[each].apply(item_manager, arguments);
-		};
-	});
-	return res;
+	return bridge.to_dnode();
 }
 
 /**
@@ -77,9 +47,18 @@ Server.prototype.listen = function () {
 		var server_node = dnode(function(remote, socket) {
 			this.item_manager = make_itemmanager_interface(self.item_manager, socket);
 
-			this.register = function(petal) {
+			this.register = function(petal, callback) {
 				self.hub.register_petal(petal);
 				self.registered_petals[socket.id].push(petal);
+				if (callback) {
+					callback(function unregister_petal(callback) {
+						self.registered_petals[socket.id].splice(self.registered_petals[socket.id].indexOf(petal), 1);
+						self.hub.unregister_petal(petal);
+						if (callback) {
+							callback();
+						}
+					});
+				}
 			};
 
 			self.registered_petals[socket.id] = [];
