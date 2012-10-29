@@ -33,19 +33,12 @@ Petal.prototype.shutdown = function (callback) {
  * Currently only when Petal#is_separate.
  * Calling local_quit on petals running inside the hub will not remove any subscription,
  * or unregister the petal.
- * TODO: this fails HORRIBLY when there are multiple petals running in a single lic instance.
  **/
 Petal.prototype.local_quit = function (callback) {
 	var self = this;
-	if (!self.is_separate) {
-		console.error("local_quit is not supported on petals running inside the hub.");
-	}
 	this.shutdown(function() {
 		function after_cleanup() {
 			function after_after_cleanup() {
-				if (self.hub_connection) {
-					self.hub_connection.end();
-				}
 				if (callback) {
 					callback.apply(self, arguments);
 				}
@@ -65,25 +58,24 @@ Petal.prototype.local_quit = function (callback) {
 };
 
 /**
-  * Petal#is_separate:
-  * This function returns true when the petal is not running inside the hub.
-  **/
-Petal.prototype.is_separate = function () {
-	return !!this.hub_connection;
-};
-
-/**
   * Petal.register:
   * for now, this function connects to the hub over the default interface, and registers with it.
   **/
 
-Petal.register = function (Constructor) {
+Petal.register = function register(Constructor) {
 	var dnode = require("dnode");
 	var conn = dnode.connect("/tmp/lic.sock");
 	conn.on('remote', function(remote) {
 		var p = new Constructor(new ItemManager_Bridge(remote.item_manager), conn);
-		remote.register({shutdown: p.shutdown.bind(p)}, function(unregister) {
-			p.unregister = unregister;
+		remote.register({shutdown: p.shutdown.bind(p)}, function register_callback(unregister) {
+			p.unregister = function unregister_and_end(cb) {
+				unregister(function end_conn() {
+					conn.end();
+					if (cb) {
+						cb();
+					}
+				});
+			};
 		});
 	});
 };

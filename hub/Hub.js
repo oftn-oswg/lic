@@ -150,8 +150,13 @@ Hub.prototype.shutdown = function () {
 };
 
 Hub.prototype.start_test_interface = function() {
+	var self = this;
 	var TestInterface = require('../petal/TestInterface');
-	this.petals.push(new TestInterface(this.item_manager));
+	var iface_instance = new TestInterface(this.item_manager);
+	this.petals.push(iface_instance);
+	iface_instance.unregister = function() {
+		self.shutdown();
+	};
 };
 
 Hub.prototype.register_petal = function(petal) {

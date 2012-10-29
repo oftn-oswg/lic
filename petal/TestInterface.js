@@ -58,9 +58,7 @@ TestInterface.prototype.start_test_interface = function() {
 	});
 
 	i.on ("close", function() {
-		if (!self.is_separate()) {
-			self.item_manager.command (["lic", "hub"], "shutdown");
-		} else if (!self.shutting_down) {
+		if (!self.shutting_down) {
 			self.local_quit();
 		}
 	});

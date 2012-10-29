@@ -49,7 +49,15 @@ Petal_Client.prototype.load_petals = function (petals) {
 			Petal = require (path.join (process.cwd(), petal));
 			var petal_instance = new Petal(new ItemManager_Bridge(self.hub_interface.item_manager), self.hub_connection);
 			self.hub_interface.register({shutdown: petal_instance.shutdown.bind(petal_instance)}, function(unregister) {
-				petal_instance.unregister = unregister;
+				self.register_petal(petal_instance);
+				petal_instance.unregister = function unregister_and_end(cb) {
+					unregister(function end_conn() {
+						self.unregister_petal(petal_instance);
+						if (cb) {
+							cb();
+						}
+					});
+				};
 			});
 		} catch (e) {
 			console.error ("Could not load petal: %s", petal);
@@ -61,6 +69,21 @@ Petal_Client.prototype.load_petals = function (petals) {
 		load (petals);
 	} else {
 		petals.forEach (load);
+	}
+};
+
+Petal_Client.prototype.register_petal = function (petal) {
+	this.petals.push(petal);
+};
+
+
+Petal_Client.prototype.unregister_petal = function (petal) {
+	var id = this.petals.indexOf(petal);
+	if (id != -1) {
+		this.petals.splice(id, 1);
+	}
+	if (this.petals.length == 0) {
+		this.hub_connection.end();
 	}
 };
 
