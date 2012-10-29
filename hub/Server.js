@@ -12,16 +12,46 @@ var Server = function (hub) {
 	this.connections = [];
 
 	this.config = {};
-	this.registered_petals = {};
+	this.un_registers = {};
+
+	this.make_server_dnode();
 };
 
-function make_itemmanager_interface(item_manager, client) {
-	var bridge = new ItemManager_Bridge(item_manager);
-	client.on('end', function() {
-		bridge.cleanup();
+/**
+  * Server.prototype.make_server_dnode
+  * Makes a dnode instance, that we can call .listen on to listen to ports.
+  */
+Server.prototype.make_server_dnode = function () {
+	var self = this;
+	// the function we pass to dnode is called as a constructor and the resulting object is given to the other side
+	this.server_dnode = dnode(function(remote, socket) {
+		self.un_registers[socket.id] = [];
+		self.handle(socket);
+
+		// expose register function, which calls self.hub.register, but with some changes to the callbacks
+		// to make sure we store the registrations and can remove them when the client quits.
+		// uses self, socket.id, and passes socket to self.handle, but nothing else.
+		this.register = function register(name, shutdown_cb, callback) {
+			self.hub.register(name, shutdown_cb, function(item_manager, unregister) {
+				self.un_registers[socket.id].push(unregister);
+				var is_registered = true;
+
+				// change the unregister function to also remove from self.un_registers
+				function unregister_client() {
+					if (!is_registered) {
+						return;
+					}
+					self.un_registers[socket.id].splice(self.un_registers[socket.id].indexOf(unregister), 1);
+					is_registered = false;
+					unregister.apply(null, arguments);
+				}
+				// the hub calls .cleanup when we use the unregister function
+				var item_manager_client = item_manager.to_dnode();
+				callback(item_manager_client, unregister_client);
+			});
+		};
 	});
-	return bridge.to_dnode();
-}
+};
 
 /**
  * Server.prototype.listen():
@@ -44,29 +74,9 @@ Server.prototype.listen = function () {
 			config.interfaces = values[0];
 		}
 
-		var server_node = dnode(function(remote, socket) {
-			this.item_manager = make_itemmanager_interface(self.item_manager, socket);
 
-			this.register = function(petal, callback) {
-				self.hub.register_petal(petal);
-				self.registered_petals[socket.id].push(petal);
-				if (callback) {
-					callback(function unregister_petal(callback) {
-						self.registered_petals[socket.id].splice(self.registered_petals[socket.id].indexOf(petal), 1);
-						self.hub.unregister_petal(petal);
-						if (callback) {
-							callback();
-						}
-					});
-				}
-			};
-
-			self.registered_petals[socket.id] = [];
-			self.handle(socket);
-		});
 		for (var i = 0, len = config.interfaces.length; i < len; i++) {
-			var connection = server_node.listen (config.interfaces[i]);
-
+			var connection = self.server_dnode.listen (config.interfaces[i]);
 			self.connections.push(connection);
 		}
 	});
@@ -118,8 +128,8 @@ Server.prototype.handle = function(socket) {
 	socket.on('end', function() {
 		console.log ("Petal disconnected");
 		// that's ugly.
-		self.registered_petals[socket.id].forEach(function(petal) {
-			self.hub.unregister_petal(petal);
+		self.un_registers[socket.id].slice().forEach(function(unreg) {
+			unreg();
 		});
 		self.connections.splice(self.connections.indexOf(socket), 1);
 	});

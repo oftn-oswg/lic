@@ -86,7 +86,7 @@ ItemManager_Bridge.prototype.cleanup = function(callback) {
 		try_callback();
 	}
 
-	this.unsubscriptions.forEach(function(unsub) {
+	this.unsubscriptions.slice().forEach(function(unsub) {
 		unsub(function() {
 			unsub_length--;
 			if (unsub_length === 0) {

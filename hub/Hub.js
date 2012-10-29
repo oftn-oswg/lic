@@ -10,6 +10,7 @@ var Config = require ("./Config.js");
 var Server = require ("./Server.js");
 
 var ItemManager = require ("./ItemManager.js");
+var ItemManager_Bridge = require ("./ItemManager_Bridge");
 
 var Hub = function () {
 	this.petals = [];
@@ -159,17 +160,44 @@ Hub.prototype.start_test_interface = function() {
 	};
 };
 
-Hub.prototype.register_petal = function(petal) {
-	this.petals.push(petal);
-	petal.registered = true;
+/** Hub.prototype.register
+  * Register a petal with the hub.
+  * @param name: the name of the petal, currently unused
+  * @param shutdown_cb: this function, if passed, will be called when the hub shuts down
+  *                     you *NEED* to call the callback when you finish your shutdown thing.
+  * @param callback:    this function is called when the registration is finished, with the parameters
+  *                     1. an instance of ItemManager_Bridge, that is like ItemManager, but keeps track of your subscriptions
+  *                     2. a function that can be called to unregister the petal, calling the function you pass it.
+
+  */
+Hub.prototype.register = function(name, shutdown_cb, callback) {
+	var petal_handle = {
+		name: name
+	  , shutdown: shutdown_cb || function(c) { if (c) {c();} }
+	  , item_manager: new ItemManager_Bridge(this.item_manager)
+	};
+	this.petals.push(petal_handle);
+	petal_handle.registered = true;
+	if (callback) {
+		callback(petal_handle.item_manager, this.unregister.bind(this, petal_handle));
+	}
 };
 
-Hub.prototype.unregister_petal = function(petal) {
-	var i = this.petals.indexOf(petal);
+/** Hub.prototype.unregister
+  * Unregister a previously registered petal.
+  * This function gets bound to a petal in register, and passed to a registered petal
+  * so you rarely have to call it yourself.
+  */
+Hub.prototype.unregister = function(petal_handle, callback) {
+	var i = this.petals.indexOf(petal_handle);
 	if (i !== -1) {
 		this.petals.splice(i, 1);
 	}
-	petal.registered = false;
+	petal_handle.registered = false;
+	petal_handle.item_manager.cleanup();
+	if (callback) {
+		callback();
+	}
 };
 
 module.exports = Hub;

@@ -1,8 +1,7 @@
 var ItemManager_Bridge = require('../../hub/ItemManager_Bridge');
 
-var Petal = function(item_manager, connection) {
+var Petal = function(item_manager) {
 	this.item_manager = item_manager;
-	this.hub_connection = connection;
 };
 
 Petal.prototype.id = "petal";
@@ -66,16 +65,23 @@ Petal.register = function register(Constructor) {
 	var dnode = require("dnode");
 	var conn = dnode.connect("/tmp/lic.sock");
 	conn.on('remote', function(remote) {
-		var p = new Constructor(new ItemManager_Bridge(remote.item_manager), conn);
-		remote.register({shutdown: p.shutdown.bind(p)}, function register_callback(unregister) {
-			p.unregister = function unregister_and_end(cb) {
-				unregister(function end_conn() {
-					conn.end();
+		var petal_inst;
+		remote.register("unnamed", function shutdown(c) {
+			if (petal_inst) {
+				petal_inst.shutdown.apply(petal_inst, arguments);
+			} else {
+				c();
+			}
+		}, function(handle, unregister) {
+			petal_inst = new Constructor(handle);
+			petal_inst.unregister = function(cb) {
+				unregister(function() {
 					if (cb) {
 						cb();
 					}
+					conn.end();
 				});
-			};
+			}
 		});
 	});
 };

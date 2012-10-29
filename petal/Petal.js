@@ -45,11 +45,18 @@ Petal_Client.prototype.load_petals = function (petals) {
 
 	function load(petal) {
 		var Petal;
+		var petal_instance;
 		try {
 			Petal = require (path.join (process.cwd(), petal));
-			var petal_instance = new Petal(new ItemManager_Bridge(self.hub_interface.item_manager), self.hub_connection);
-			self.hub_interface.register({shutdown: petal_instance.shutdown.bind(petal_instance)}, function(unregister) {
-				self.register_petal(petal_instance);
+
+			self.hub_interface.register("unname", function shutdown(c) {
+				if (petal_instance) {
+					petal_instance.shutdown.apply(petal_instance, arguments);
+				} else {
+					c();
+				}
+			}, function(handle, unregister) {
+				petal_instance = new Petal(new ItemManager_Bridge(handle));
 				petal_instance.unregister = function unregister_and_end(cb) {
 					unregister(function end_conn() {
 						self.unregister_petal(petal_instance);
@@ -57,11 +64,12 @@ Petal_Client.prototype.load_petals = function (petals) {
 							cb();
 						}
 					});
-				};
+				}
 			});
 		} catch (e) {
 			console.error ("Could not load petal: %s", petal);
 			console.error (e.stack);
+			/* check for quit */
 		}
 	}
 
@@ -76,7 +84,9 @@ Petal_Client.prototype.register_petal = function (petal) {
 	this.petals.push(petal);
 };
 
-
+/** Petal_Client#unregister_petal
+  * TODO: make sure to not quit when there are still petals to load
+  */
 Petal_Client.prototype.unregister_petal = function (petal) {
 	var id = this.petals.indexOf(petal);
 	if (id != -1) {
