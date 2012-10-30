@@ -56,7 +56,7 @@ Petal_Client.prototype.load_petals = function (petals) {
 					c();
 				}
 			}, function(handle, unregister) {
-				petal_instance = new Petal(new ItemManager_Bridge(handle));
+				petal_instance = new Petal(new ItemManager_Bridge(handle), self.hub_interface);
 				petal_instance.unregister = function unregister_and_end(cb) {
 					unregister(function end_conn() {
 						self.unregister_petal(petal_instance);

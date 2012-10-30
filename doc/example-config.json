@@ -20,6 +20,15 @@
             }
         ]
     },
+    "web": {
+        "interfaces": [
+            {
+                "listen": 9797,
+                "static": "webirc",
+                "js": "webirc/js/entry.js"
+            }
+        ]
+    },
     "Core": {
         "interfaces": [
             "/tmp/lic.sock"
