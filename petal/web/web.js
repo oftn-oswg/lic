@@ -35,6 +35,7 @@ var Web_Server = require ("./Server.js");
 
 var WebInterface = function (item_manager, hub_interface) {
 	Petal.apply (this, arguments);
+	this.hub_interface = hub_interface;
 
 	this.config = null;
 	this.servers = [];
@@ -50,7 +51,6 @@ var WebInterface = function (item_manager, hub_interface) {
 		self.listen ();
 	});
 
-	this.hub_interface = hub_interface;
 };
 
 util.inherits (WebInterface, Petal);

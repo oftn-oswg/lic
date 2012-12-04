@@ -66,7 +66,6 @@ function make_dnode(self, socket) {
 				shutdown_cb(function(client_cb) {
 					cb();
 					socket.shutdown_needed--;
-					console.log('shutdown_needed', socket.shutdown_needed)
 					if (socket.shutdown_needed == 0) {
 						socket.emit('petals_shutdown');
 					}

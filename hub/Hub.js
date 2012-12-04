@@ -90,7 +90,7 @@ Hub.prototype.load_petals = function(petals) {
 		var Petal;
 		try {
 			Petal = require (path.join (process.cwd(), petal));
-			self.petals.push (new Petal(self.item_manager));
+			self.petals.push (new Petal(self.item_manager, {register: self.register.bind(self)}));
 		} catch (e) {
 			console.error ("Could not load petal: %s", petal);
 			console.error (e.stack);
